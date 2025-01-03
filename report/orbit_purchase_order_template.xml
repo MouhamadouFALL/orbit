@@ -36,7 +36,7 @@
                     <tr>
                         <th name="th_description"><strong>Description</strong></th>
                         <th name="th_taxes"><strong>Taxes</strong></th>
-                        <th name="th_date_req" class="text-center"><strong>Date de la demande</strong></th>
+                        <!-- <th name="th_date_req" class="text-center"><strong>Date de la demande</strong></th> -->
                         <th name="th_quantity" class="text-end"><strong>Qté</strong></th>
                         <th name="th_price_unit" class="text-end"><strong>Prix unitaire</strong></th>
                         <th name="th_amount" class="text-end"><strong>Montant</strong></th>
@@ -54,13 +54,14 @@
                                     <!-- <span t-field="line.name"/> -->
                                     <span t-field="line.product_id.name"/>
                                 </td>
-                                <t t-set="taxes" t-value="', '.join([(tax.description or tax.name) for tax in line.taxes_id])"/>
+                                <!-- <t t-set="taxes" t-value="', '.join([(tax.description or tax.name) for tax in line.taxes_id])"/> -->
+                                <t t-set="taxes" t-value="', '.join([(tax.name) for tax in line.taxes_id])"/>
                                 <td name="td_taxes" t-attf-class="text-end {{ 'text-nowrap' if len(taxes) &lt; 10 else '' }}">
                                     <span t-out="taxes">Tax 15%</span>
                                 </td>
-                                <td class="text-center">
+                                <!-- <td class="text-center">
                                     <span t-field="line.date_planned"/>
-                                </td>
+                                </td> -->
                                 <td class="text-end">
                                     <span t-field="line.product_qty"/>
                                     <span t-field="line.product_uom.name" groups="uom.group_uom"/>
@@ -131,7 +132,7 @@
                                 </t>
                             </td>
                             <td style="text-align: right;">
-                                <p><strong>Date:</strong> <t t-esc="context_timestamp(datetime.datetime.now()).strftime('%d-%m-%Y %H:%M')"/></p>
+                                <p><strong>Date et heure:</strong> <t t-esc="context_timestamp(datetime.datetime.now()).strftime('%d-%m-%Y %H:%M')"/></p>
                             </td>
                         </tr>
                     </table>
