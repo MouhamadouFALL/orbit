@@ -34,6 +34,7 @@ class ProductTemplate(models.Model):
         digits=(16, 2),
         help="Price for promotions. This price will be applied when a product is in promotion",
         compute='_compute_promo_price',
+        readonly=False,
         store=True
     )
 
