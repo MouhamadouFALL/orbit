@@ -20,7 +20,7 @@
                     {'invisible': ['|', '&amp;', ('is_company', '=', True),('parent_id', '=', False),('company_name', '!=', False),('company_name', '!=', '')]}
                 </attribute>
             </field>
-            <page name="internal_notes" position="after">
+            <!-- <page name="internal_notes" position="after">
                 <page name="verified_account" string="Compte User">
                     <group>
                         <group>
@@ -28,7 +28,7 @@
                         </group>
                     </group>
                 </page>
-            </page>
+            </page> -->
         </field>
     </record>
 
