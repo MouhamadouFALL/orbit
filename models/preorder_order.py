@@ -45,6 +45,7 @@ class Preorder(models.Model):
         compute="_compute_advance_payment",
     )
     
+    # Gestion des commandes échue
     state_due = fields.Selection(
         selection=[
             ("not_due", "Non échu"),
@@ -218,40 +219,35 @@ class Preorder(models.Model):
                 # Vérifie chaque date et état de paiement
                 
                 if order.first_payment_date and not order.first_payment_state and order.first_payment_date < current_date:
-                    days_diff = (current_date - order.first_payment_date).days
-                    order.write({
-                        'state_due': 'due'
-                    })
+                    days_diff += (current_date - order.first_payment_date).days
+                    order.state_due = 'due'
+                    
                     overdue_total += order.first_payment_amount
                 
                 if order.second_payment_date and not order.second_payment_state and order.second_payment_date < current_date:
-                    days_diff = (current_date - order.second_payment_date).days
-                    order.write({
-                        'state_due': 'due'
-                    })
+                    days_diff += (current_date - order.second_payment_date).days
+                    order.state_due = 'due'
+                    
                     overdue_total += order.second_payment_amount
                 
                 if order.third_payment_date and not order.third_payment_state and order.third_payment_date < current_date:
-                    days_diff = (current_date - order.third_payment_date).days
-                    order.write({
-                        'state_due': 'due'
-                    })
+                    days_diff += (current_date - order.third_payment_date).days
+                    order.state_due = 'due'
+                    
                     overdue_total += order.third_payment_amount
                 
                 if order.fourth_payment_date and not order.fourth_payment_state and order.fourth_payment_date < current_date:
-                    days_diff = (current_date - order.fourth_payment_date).days
-                    order.write({
-                        'state_due': 'due'
-                    })
+                    days_diff += (current_date - order.fourth_payment_date).days
+                    order.state_due = 'due'
+                    
                     overdue_total += order.fourth_payment_amount
             else:
                 # Vérifie chaque date et état de paiement
-                order.write({
-                        'state_due': 'not_due'
-                    })
+                order.state_due = 'not_due'
+                
             order.days_util_due = days_diff
             order.overdue_amount = overdue_total
-                
+                    
     @api.depends(
             'order_line.price_subtotal', 
             'order_line.price_tax', 
