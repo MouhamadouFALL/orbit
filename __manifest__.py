@@ -20,6 +20,9 @@
 
         'security/orbit_security.xml',
         'security/ir.model.access.csv',
+        
+        # ***************************** actions planifier ****************
+        'data/orders_due_ir_cron_data.xml',
 
         'wizard/preorder_advance_payment_wzd_view.xml',
         'wizard/crm_opportunity_to_quotation_orbit_views.xml',
