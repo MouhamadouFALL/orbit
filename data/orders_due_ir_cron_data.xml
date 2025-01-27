@@ -1,0 +1,15 @@
+<odoo>
+    <data noupdate="1">
+        <!-- Tâche planifiée pour recupérer les commandes échues -->
+        <record id="ir_cron_orders_due" model="ir.cron">
+            <field name="name">Repérer les commandes échues</field>
+            <field name="model_id" ref="model_sale_order"/>
+            <field name="state">code</field>
+            <field name="code">model.cron_due_orders()</field>
+            <field name="active" eval="True"/>
+            <field name="interval_number">1</field>
+            <field name="interval_type">days</field>
+            <field name="numbercall">-1</field>
+        </record>
+    </data>
+</odoo>

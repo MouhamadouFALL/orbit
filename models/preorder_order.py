@@ -104,6 +104,15 @@ class Preorder(models.Model):
     validation_admin_comment = fields.Text(string='Commentaire Admin', readonly=True)
 
 
+    # ----------------------------------------------- Methodes ------------------------------------------------------
+    @api.model
+    def cron_due_orders(self):
+        # Récupérer toutes les commandes
+        orders = self.search([])
+        orders._compute_is_due()
+        
+        
+        
     def validate_rh(self):
 
         for order in self:
