@@ -66,6 +66,12 @@ class ProductTemplate(models.Model):
             count += len(template.product_variant_ids.filtered(lambda p: p.image_variant_1920))
             template.image_count = count
             
+    def write(self, vals):
+        """ Met à jour le compteur d'images à chaque modification """
+        res = super(ProductTemplate, self).write(vals)
+        if any(field in vals for field in ['image_1920', 'image_1', 'image_2', 'image_3', 'image_4']):
+            self._compute_image_count()
+        return res
             
     @api.depends('rate_price')
     def _compute_promo_price(self):
