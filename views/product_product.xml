@@ -44,7 +44,7 @@
 
             </xpath>
             <xpath expr="//page[@name='general_information']" position="after">
-                <page string="Pr2commande" invisible="1">
+                <page string="Précommande" invisible="1">
                     <group string="Preorder">
                         <group >
                             <field name="preorder_deadline" string="Dead Line preorder allowed"/>
@@ -66,6 +66,7 @@
                         <group>
                             <field name="ordered_qty" string="Quantité commandée" readonly="1"/>
                             <field name="preordered_qty" string="Quantité précommandée" readonly="1"/>
+                            <field name="image_count" string="Nombre d'image" readonly="1"/>
                             <!-- <field name="outgoing_qty" string="Quantité total sortante" readonly="1"/> -->
                             <!-- <field name="free_qty" string="Quantité Libre" readonly="1"/> -->
                         </group>

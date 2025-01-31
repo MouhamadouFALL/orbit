@@ -72,83 +72,86 @@
                         />
                     </page>
 
-                    <!-- ############## Page Précommandes ############## -->
-                    <page string="Échéancier"
-                          attrs="{'invisible': [('type_sale', 'not in', ['preorder', ])]}">
-                        <group string="Dates &amp; Montants">
-                            <group>
-                                <field name="first_payment_date" string="1ère date d'échéance"/>
-                                <field name="second_payment_date" string="2ème date d'échéance"/>
-                                <field name="third_payment_date" string="3ème date d'échéance"/>
-                            </group>
-                            <group>
-                                <field name="first_payment_amount" string="1er montant" readonly="1"/>
-                                <field name="second_payment_amount" string="2ème montant" readonly="1"/>
-                                <field name="third_payment_amount" string="3ème montant" readonly="1"/>
-                            </group>
-                        </group>
-                        <group string="Suivi Paiements">
-                            <group string="Montants">
-                                <field name="amount_total" string="Montant total"/>
-                                <field name="amount_residual" string="Montant Restant"/>
-                            </group>
-                            <group string="Status de paiements">
-                                <field name="advance_payment_status"/>
-                                    <field name="first_payment_state" string="1er paiement" widget="boolean_toggle" />
-                                    <field name="second_payment_state" string="2ème paiement" widget="boolean_toggle"/>
-                                    <field name="third_payment_state" string="3ème paiement" widget="boolean_toggle"/>
-                            </group>
-                        </group>
-                    </page>
-
-                    <!-- ############## Partie Commandes à crédit ############## -->
-                    <page string="Validations" attrs="{'invisible': [('type_sale', 'not in', ['creditorder', ])]}">
+                    <!-- ############## Partie Validations (Commande à crédit uniquement) ############## -->
+                    <page string="Validations" attrs="{'invisible': [('type_sale', '!=', 'creditorder')]}">
                         <group>
                             <group string="Responsable du client">
                                 <field name="validation_rh_state" string="Responsable du client" readonly="True"/>
-                                <field name="validation_rh_date" string="Date "/>
+                                <field name="validation_rh_date" string="Date"/>
                                 <field name="validation_rh_partner_id" string="Nom Responsable"/>
                             </group>
                             <group string="Responsable de vente">
                                 <field name="validation_admin_state" string="Responsable de vente" readonly="True"/>
-                                <field name="validation_admin_date" string="Date "/>
-                                <field name="validation_admin_user_id" string="Nom Responsable "/>
+                                <field name="validation_admin_date" string="Date"/>
+                                <field name="validation_admin_user_id" string="Nom Responsable"/>
                             </group>
                         </group>
                     </page>
 
+                    <!-- ############## Vue Fusionnée - Échéancier ############## -->
                     <page string="Échéancier"
-                          attrs="{'invisible': [('type_sale', 'not in', ['creditorder', ])]}">
+                        attrs="{'invisible': [('type_sale', 'not in', ['preorder', 'creditorder'])]}">
                         <group string="Dates &amp; Montants">
+                            <!-- Dates d'échéance -->
                             <group string="Dates d'échéance">
                                 <field name="first_payment_date" string="1ère date d'échéance"/>
                                 <field name="second_payment_date" string="2ème date d'échéance"/>
                                 <field name="third_payment_date" string="3ème date d'échéance"/>
-                                <field name="fourth_payment_date" string="4ème date d'échéance"/>
+                                <field name="fourth_payment_date" string="4ème date d'échéance" 
+                                    attrs="{'invisible': [('type_sale', '!=', 'creditorder')]}"/>
                             </group>
+
+                            <!-- Montants à verser -->
                             <group string="Montants à verser">
                                 <field name="first_payment_amount" string="1er montant" readonly="1"/>
                                 <field name="second_payment_amount" string="2ème montant" readonly="1"/>
                                 <field name="third_payment_amount" string="3ème montant" readonly="1"/>
-                                <field name="fourth_payment_amount" string="4ème montant" readonly="1"/>
+                                <field name="fourth_payment_amount" string="4ème montant" readonly="1"
+                                    attrs="{'invisible': [('type_sale', '!=', 'creditorder')]}"/>
+                            </group>
+
+                            <!-- Jours avant/après échéance -->
+                            <group string="Jours avant/après échéance">
+                                <field name="days_util_due" string="Avant/Après échéance" readonly="1"/>
+                                <!-- <field name="days_util_due_first" string="1er paiement" readonly="1"/> -->
+                                <!-- <field name="days_util_due_second" string="2ème paiement" readonly="1"/> -->
+                                <!-- <field name="days_util_due_third" string="3ème paiement" readonly="1"/> -->
+                                <!-- <field name="days_util_due_fourth" string="4ème paiement" readonly="1"
+                                   attrs="{'invisible': [('type_sale', '!=', 'creditorder')]}"/> -->
+
+                            </group>
+                            <group string="">
+
                             </group>
                         </group>
+
+                        <!-- Suivi des Paiements -->
                         <group string="Suivi Paiements">
+                            <!-- Montants -->
                             <group string="Montants">
                                 <field name="amount_total" string="Montant total"/>
                                 <field name="amount_residual" string="Montant Restant"/>
                                 <field name="amount_payed" string="Montant payé"/>
                                 <field name="overdue_amount" string="Montant échu"/>
+                                
                             </group>
-                            <group string="Status de paiements">
-                                <field name="advance_payment_status"/>
-                                    <field name="first_payment_state" string="1er paiement" widget="boolean_toggle" />
-                                    <field name="second_payment_state" string="2ème paiement" widget="boolean_toggle"/>
-                                    <field name="third_payment_state" string="3ème paiement" widget="boolean_toggle"/>
-                                    <field name="fourth_payment_state" string="4ème paiement" widget="boolean_toggle"/>
+
+                            <!-- Statuts de paiements -->
+                            <group string="Statuts de paiements">
+                                <field name="advance_payment_status" widget="badge"
+                                    decoration-success="advance_payment_status == 'paid'"
+                                    decoration-warning="advance_payment_status == 'partial'"
+                                    decoration-danger="advance_payment_status == 'not_paid'" 
+                                />
+                                <field name="first_payment_state" string="1er paiement" widget="boolean_toggle"/>
+                                <field name="second_payment_state" string="2ème paiement" widget="boolean_toggle"/>
+                                <field name="third_payment_state" string="3ème paiement" widget="boolean_toggle"/>
+                                <field name="fourth_payment_state" string="4ème paiement" widget="boolean_toggle"
+                                    attrs="{'invisible': [('type_sale', '!=', 'creditorder')]}"/>
                             </group>
                         </group>
                     </page>
+                    
                 </xpath>
 
                 <!-- ############## In page order_lines ############## -->
@@ -171,6 +174,7 @@
                 </xpath>
 
             </field>
+
         </record>
 
         <!-- ************************************ View Tree ************************************ -->
@@ -191,14 +195,16 @@
                     <field name="state" widget="badge" optional="show" />
                     <field name="days_util_due" invisible="1"/>
 
-                    <field name="state_due" widget="badge" optional="hide"
-                        decoration-success="days_util_due &lt;= 0"
-                        decoration-info="days_util_due &lt;= 5 and days_util_due &gt; 0"
+                    <field name="state_due" string="État d'échéance" widget="badge" optional="show"
+                        decoration-success="days_util_due &lt; -5"
+                        decoration-info="days_util_due &lt; 0"
+                        decoration-warning="days_util_due &lt;= 5 and days_util_due &gt; 0"
                         decoration-danger="days_util_due &gt; 5"
                     />
-                    <field name="overdue_amount" string="Échu" widget="badget" optional="show"
-                        decoration-success="days_util_due &lt;= 0"
-                        decoration-info="days_util_due &lt; 5 and days_util_due &gt; 0"
+                    <field name="overdue_amount" string="MT Échu" widget="badget" optional="hide"
+                        decoration-success="days_util_due &lt; -5"
+                        decoration-info="days_util_due &lt; 0"
+                        decoration-warning="days_util_due &lt;= 5 and days_util_due &gt; 0"
                         decoration-danger="days_util_due &gt; 5"
                     />
                     

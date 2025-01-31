@@ -52,12 +52,23 @@ class Preorder(models.Model):
             ("due", "échu"),
         ],
         default='not_due',
-        string="Commande échu", store=True,
+        string="État d'échéance", 
+        store=True,
         compute="_compute_is_due", 
-        help="Indique si une commandes à des paiements échus"
+        help="Indique si la commande a des échéances à venir ou dépassées"
     )
-    days_util_due = fields.Integer(string="Jours avant écheance", compute="_compute_is_due", store=True)
-    overdue_amount = fields.Float(string="Montant échu", compute="_compute_is_due", store=True)
+    days_util_due = fields.Integer(
+        string="Jours avant/après échéance", 
+        compute="_compute_is_due", 
+        store=True,
+        help="Négatif pour les échéances à venir (-5 à 0), positif pour les retard"
+    )
+    overdue_amount = fields.Float(
+        string="Montant échu", 
+        compute="_compute_is_due", 
+        store=True, 
+        help="Montant total des échéances dépassées"
+    )
     
     payment_count = fields.Float(compute_sudo=True, compute="_compute_advance_payment")
 
@@ -214,48 +225,101 @@ class Preorder(models.Model):
     # ------------------------------------------ computes methods ----------------------
     
     @api.depends(
-        'first_payment_date', 'second_payment_date', 'third_payment_date', 'fourth_payment_date',
-        'first_payment_state', 'second_payment_state', 'third_payment_state', 'fourth_payment_state'
+        'first_payment_date', 'second_payment_date', 
+        'third_payment_date', 'fourth_payment_date',
+        'first_payment_state', 'second_payment_state', 
+        'third_payment_state', 'fourth_payment_state'
     )
     def _compute_is_due(self):
-        current_date = fields.Date.today()
+        #current_date = fields.Date.today()
+        current_date = fields.Date.context_today(self)
+        
         for order in self:
-            
-            days_diff = 0
-            overdue_total = 0
-                
+            relevant_diffs = []
+            overdue_total = 0.0
+            payment_data = [
+                (order.first_payment_date, order.first_payment_state, order.first_payment_amount),
+                (order.second_payment_date, order.second_payment_state, order.second_payment_amount),
+                (order.third_payment_date, order.third_payment_state, order.third_payment_amount),
+                (order.fourth_payment_date, order.fourth_payment_state, order.fourth_payment_amount)
+            ]
+
             if order.type_sale in ['preorder', 'creditorder']:
-                # Vérifie chaque date et état de paiement
-                
-                if order.first_payment_date and not order.first_payment_state and order.first_payment_date < current_date:
-                    days_diff += (current_date - order.first_payment_date).days
-                    order.state_due = 'due'
+                for date, state, amount in payment_data:
+                    if date and not state:
+                        days_diff = (current_date - date).days
+                        
+                        # Vérifie si dans la fenêtre [-5 jours; +infini]
+                        #if days_diff >= -5:
+                        relevant_diffs.append(days_diff)
+                        
+                        # Cumule uniquement les montants échus
+                        if days_diff >= 0:
+                            overdue_total += amount
+
+                # Détermine l'état et les valeurs
+                if relevant_diffs:
+                    overdue_diffs = [d for d in relevant_diffs if d > 0]
+                    # become_overdue_diffs = [d for d in relevant_diffs if d >=-5 and d < 0]
                     
-                    overdue_total += order.first_payment_amount
-                
-                if order.second_payment_date and not order.second_payment_state and order.second_payment_date < current_date:
-                    days_diff += (current_date - order.second_payment_date).days
-                    order.state_due = 'due'
+                    if overdue_diffs:
+                        order.state_due = 'due'
+                        # Prend le retard le plus important
+                        order.days_util_due = max(overdue_diffs)
+                        order.overdue_amount = overdue_total
+                    else:
+                        order.state_due = 'not_due' #+ 
+                        # Prend l'échéance la plus proche
+                        order.days_util_due = max(relevant_diffs)
                     
-                    overdue_total += order.second_payment_amount
-                
-                if order.third_payment_date and not order.third_payment_state and order.third_payment_date < current_date:
-                    days_diff += (current_date - order.third_payment_date).days
-                    order.state_due = 'due'
-                    
-                    overdue_total += order.third_payment_amount
-                
-                if order.fourth_payment_date and not order.fourth_payment_state and order.fourth_payment_date < current_date:
-                    days_diff += (current_date - order.fourth_payment_date).days
-                    order.state_due = 'due'
-                    
-                    overdue_total += order.fourth_payment_amount
+                    # order.overdue_amount = overdue_total
+                else:
+                    order.state_due = 'not_due'
+                    order.days_util_due = 0
+                    order.overdue_amount = 0.0
             else:
-                # Vérifie chaque date et état de paiement
                 order.state_due = 'not_due'
+                order.days_util_due = 0
+                order.overdue_amount = 0.0
+        
+        
+        # for order in self:
+            
+        #     days_diff = 0
+        #     overdue_total = 0
                 
-            order.days_util_due = days_diff
-            order.overdue_amount = overdue_total
+        #     if order.type_sale in ['preorder', 'creditorder']:
+        #         # Vérifie chaque date et état de paiement
+                
+        #         if order.first_payment_date and not order.first_payment_state and order.first_payment_date < current_date:
+        #             days_diff += (current_date - order.first_payment_date).days
+        #             order.state_due = 'due'
+                    
+        #             overdue_total += order.first_payment_amount
+                
+        #         if order.second_payment_date and not order.second_payment_state and order.second_payment_date < current_date:
+        #             days_diff += (current_date - order.second_payment_date).days
+        #             order.state_due = 'due'
+                    
+        #             overdue_total += order.second_payment_amount
+                
+        #         if order.third_payment_date and not order.third_payment_state and order.third_payment_date < current_date:
+        #             days_diff += (current_date - order.third_payment_date).days
+        #             order.state_due = 'due'
+                    
+        #             overdue_total += order.third_payment_amount
+                
+        #         if order.fourth_payment_date and not order.fourth_payment_state and order.fourth_payment_date < current_date:
+        #             days_diff += (current_date - order.fourth_payment_date).days
+        #             order.state_due = 'due'
+                    
+        #             overdue_total += order.fourth_payment_amount
+        #     else:
+        #         # Vérifie chaque date et état de paiement
+        #         order.state_due = 'not_due'
+                
+        #     order.days_util_due = days_diff
+        #     order.overdue_amount = overdue_total
                     
     @api.depends(
             'order_line.price_subtotal', 
