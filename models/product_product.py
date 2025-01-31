@@ -48,15 +48,25 @@ class ProductTemplate(models.Model):
                                   help="Total quantity of products that have been ordered by customers but not yet delivered."
                                   )
     
+    image_1 = fields.Binary(string='Image 1', attachment=True)
+    image_2 = fields.Binary(string='Image 2', attachment=True)
+    image_3 = fields.Binary(string='Image 3', attachment=True)
+    image_4 = fields.Binary(string='Image 4', attachment=True)
+    
     image_count = fields.Integer("Nombre d'images", compute="_compute_image_count", store=True, help="Total number of images associated with this product.")
     
-    @api.depends('image_1920', 'product_variant_ids.image_variant_1920')
+    @api.depends('image_1920', 'product_variant_ids.image_variant_1920', 'image_1', 'image_2', 'image_3', 'image_4')
     def _compute_image_count(self):
         for template in self:
-            count = 1 if template.image_1920 else 0  # Image du template
-            count += template.product_variant_ids.filtered(lambda p: p.image_variant_1920).mapped('id').__len__()  # Images des variantes
+            # Comptage des images du template
+            images = [template.image_1920, template.image_1, template.image_2, template.image_3, template.image_4]
+            count = sum(1 for image in images if image)
+
+            # Comptage des images des variantes
+            count += len(template.product_variant_ids.filtered(lambda p: p.image_variant_1920))
             template.image_count = count
-    
+            
+            
     @api.depends('rate_price')
     def _compute_promo_price(self):
         for prod in self:
