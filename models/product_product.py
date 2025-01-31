@@ -66,12 +66,19 @@ class ProductTemplate(models.Model):
             count += len(template.product_variant_ids.filtered(lambda p: p.image_variant_1920))
             template.image_count = count
             
-    def write(self, vals):
-        """ Met à jour le compteur d'images à chaque modification """
-        res = super(ProductTemplate, self).write(vals)
-        if any(field in vals for field in ['image_1920', 'image_1', 'image_2', 'image_3', 'image_4']):
-            self._compute_image_count()
-        return res
+    # def write(self, vals):
+    #     """ Met à jour le compteur d'images à chaque modification """
+    #     res = super(ProductTemplate, self).write(vals)
+    #     if any(field in vals for field in ['image_1920', 'image_1', 'image_2', 'image_3', 'image_4']):
+    #         self._compute_image_count()
+    #     return res
+    
+    @api.model
+    def cron_update_image_count(self):
+        """ Recalcul périodique du nombre d'images via une tâche cron """
+        products = self.search([])
+        products._compute_image_count()
+        self._cr.commit()  # Forcer la sauvegarde en base pour éviter les pertes si la tâche plante
             
     @api.depends('rate_price')
     def _compute_promo_price(self):
