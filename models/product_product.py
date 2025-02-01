@@ -44,6 +44,10 @@ class ProductTemplate(models.Model):
                                   help="Total quantity of products that have been preordered by customers but not yet delivered."
                                   )
     
+    creditorder_qty = fields.Float('Creditorder Quantity', compute='_compute_creditorder_qty', store=True, 
+                                  help="Total quantity of products that have been creditordered by customers but not yet delivered."
+                                  )
+    
     ordered_qty = fields.Float('Ordered Quantity', compute='_compute_ordered_qty', store=True, 
                                   help="Total quantity of products that have been ordered by customers but not yet delivered."
                                   )
@@ -101,6 +105,20 @@ class ProductTemplate(models.Model):
             #if preordered_lines.
             product.preordered_qty = sum(line.product_uom_qty for line in preordered_lines) - sum(line.qty_delivered for line in preordered_lines)
 
+    @api.depends('qty_available', 'outgoing_qty')
+    def _compute_creditorder_qty(self):
+        for product in self:
+            # Filtrer les lignes de commande client qui sont dans un état de commande crédit (par exemple, 'creditorder')
+            creditorder_lines = self.env['sale.order.line'].search([
+                ('product_id.product_tmpl_id', '=', product.id),
+                ('order_id.state', 'in', ['sale', 'to_delivered']),
+                ('order_id.type_sale', '=', 'creditorder')
+                # Assumant que 'preorder' est l'état d'une précommande
+            ])
+            #if preordered_lines.
+            product.creditorder_qty = sum(line.product_uom_qty for line in creditorder_lines) - sum(line.qty_delivered for line in creditorder_lines)
+            
+            
     @api.depends('qty_available', 'outgoing_qty')
     def _compute_ordered_qty(self):
         for product in self:
