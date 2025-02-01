@@ -8,7 +8,7 @@
             <field name="user_id" ref="base.user_root"/>  <!-- Exécuté en tant que superadmin -->
             <field name="interval_number">5</field>
             <field name="interval_type">minutes</field>
-            <field name="numbercall">-1</field>  <!-- Répétition infinie -->
+            <field name="numbercall">5</field>  <!-- Répétition infinie -->
             <field name="active" eval="True"/>
         </record>
     </data>

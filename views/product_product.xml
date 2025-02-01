@@ -87,6 +87,7 @@
                 <field name="is_creditorder" optional="hide" string="Commande à crédit"/>
                 <field name="preordered_qty" string="Qty preordered" optional="show" sum="Total Preorder qty"/>
                 <field name="ordered_qty" string="Qty ordered" optional="hide" sum="Total Order qty" />
+                <field name="image_count" string="Nombre d'image" optional="hide"/>
             </field>
         </field>
     </record>

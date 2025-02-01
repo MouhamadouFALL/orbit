@@ -48,10 +48,10 @@ class ProductTemplate(models.Model):
                                   help="Total quantity of products that have been ordered by customers but not yet delivered."
                                   )
     
-    image_1 = fields.Binary(string='Image 1', attachment=True)
-    image_2 = fields.Binary(string='Image 2', attachment=True)
-    image_3 = fields.Binary(string='Image 3', attachment=True)
-    image_4 = fields.Binary(string='Image 4', attachment=True)
+    image_1 = fields.Binary(string='Image 1')
+    image_2 = fields.Binary(string='Image 2')
+    image_3 = fields.Binary(string='Image 3')
+    image_4 = fields.Binary(string='Image 4')
     
     image_count = fields.Integer("Nombre d'images", compute="_compute_image_count", store=True, help="Total number of images associated with this product.")
     
