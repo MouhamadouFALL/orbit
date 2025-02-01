@@ -448,53 +448,71 @@ class Preorder(models.Model):
         'account_payment_ids.move_id.line_ids.amount_currency',
         'invoice_ids.amount_residual'
     )
+    
     def _compute_advance_payment(self):
+        """
+        Calcule le paiement anticipé sur le bon de commande en considérant :
+          - les paiements directement liés au bon (via account_payment_ids),
+          - les paiements sur les factures associées.
+        La méthode met à jour les champs :
+          - payment_line_ids : les lignes de paiement concernées,
+          - amount_payed        : le montant total payé,
+          - payment_count       : le nombre de lignes de paiement,
+          - amount_residual     : le montant restant dû,
+          - advance_payment_status : l'état du paiement ('not_paid', 'partial', 'paid').
+        """
         for order in self:
-            mls = order.account_payment_ids.mapped("move_id.line_ids").filtered(
-                lambda x: x.account_id.account_type == "asset_receivable"
-                          and x.parent_state == "posted"
+            # Récupérer l'ensemble des lignes d'écriture de paiement associées au bon de commande
+            payment_lines = order.account_payment_ids.mapped("move_id.line_ids").filtered(
+                lambda line: line.account_id.account_type == "asset_receivable" and line.parent_state == "posted"
             )
+
             advance_amount = 0.0
-            for line in mls:
+            for line in payment_lines:
+                # Déterminer la devise utilisée pour la ligne (celle de la ligne ou celle de la société par défaut)
                 line_currency = line.currency_id or line.company_id.currency_id
-                # Exclude reconciled pre-payments amount because once reconciled
-                # the pre-payment will reduce invoice residual amount like any
-                # other payment.
-                line_amount = (
-                    line.amount_residual_currency
-                    if line.currency_id
-                    else line.amount_residual
-                )
-                line_amount *= -1
+                # On prend le montant résiduel (en devise ou en compagnie) et on le convertit en montant positif
+                line_amount = line.amount_residual_currency if line.currency_id else line.amount_residual
+                line_amount = -line_amount
+
+                # Convertir le montant dans la devise du bon de commande s'il diffère
                 if line_currency != order.currency_id:
-                    advance_amount += line.currency_id._convert(
+                    advance_amount += line_currency._convert(
                         line_amount,
                         order.currency_id,
                         order.company_id,
-                        line.date or fields.Date.today(),
+                        line.date or fields.Date.context_today(order)
                     )
                 else:
                     advance_amount += line_amount
 
-            # Consider payments in related invoices.
-            invoice_paid_amount = 0.0
-            for inv in order.invoice_ids:
-                invoice_paid_amount += inv.amount_total - inv.amount_residual
-            amount_residual = order.amount_total - advance_amount - invoice_paid_amount
-            payment_state = "not_paid"
-            if mls:
-                has_due_amount = float_compare(
-                    amount_residual, 0.0, precision_rounding=order.currency_id.rounding
+            # Prendre en compte les paiements sur les factures liées au bon de commande.
+            # Pour chaque facture, le paiement correspond à la différence entre le montant total et le résiduel.
+            invoice_paid_amount = sum(invoice.amount_total - invoice.amount_residual for invoice in order.invoice_ids)
+
+            # Calculer le montant résiduel du bon de commande après déduction des paiements (directs et sur factures)
+            computed_amount_residual = order.amount_total - advance_amount - invoice_paid_amount
+
+            # Déterminer l'état du paiement
+            if payment_lines:
+                cmp_res = float_compare(
+                    computed_amount_residual, 0.0, precision_rounding=order.currency_id.rounding
                 )
-                if has_due_amount <= 0:
+                if cmp_res <= 0:
                     payment_state = "paid"
-                elif has_due_amount > 0:
+                else:
                     payment_state = "partial"
-            order.payment_line_ids = mls
-            order.amount_payed = order.amount_total - order.amount_residual
-            order.payment_count = len(order.payment_line_ids)
-            order.amount_residual = amount_residual
+            else:
+                payment_state = "not_paid"
+
+            # Mettre à jour les champs calculés sur le bon de commande
+            order.payment_line_ids = payment_lines
+            # Le montant payé est défini ici comme la différence entre le montant total et le montant résiduel calculé
+            order.amount_payed = order.amount_total - computed_amount_residual
+            order.payment_count = len(payment_lines)
+            order.amount_residual = computed_amount_residual
             order.advance_payment_status = payment_state
+
 
     def action_cancel(self):
         res = super(Preorder, self).action_cancel()
