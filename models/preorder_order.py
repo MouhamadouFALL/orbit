@@ -473,7 +473,7 @@ class Preorder(models.Model):
             for line in payment_lines:
                 # Utilisation de la devise de la ligne, sinon celle de la société
                 line_currency = line.currency_id or line.company_id.currency_id
-                # Récupération du montant résiduel de la ligne (le signe est inversé pour obtenir un montant positif)
+                # Récupération du montant résiduel de la ligne (inverser le signe pour obtenir un montant positif)
                 line_amount = line.amount_residual_currency if line.currency_id else line.amount_residual
                 line_amount = -line_amount
                 # Conversion dans la devise du bon de commande si nécessaire
@@ -485,10 +485,8 @@ class Preorder(models.Model):
                 advance_amount += line_amount
 
             # 2. Traitement des paiements sur factures liées
-            # Pour chaque facture, le paiement réalisé correspond à (montant_total - montant_residuel)
             invoice_paid_amount = 0.0
             for invoice in order.invoice_ids.filtered(lambda inv: inv.move_type in ('out_invoice', 'out_refund')):
-                # On s'assure que la facture est en mode paiement effectif (en fonction de son état de paiement)
                 invoice_paid_amount += invoice.amount_total - invoice.amount_residual
 
             # 3. Calcul du montant résiduel du bon de commande
@@ -508,6 +506,7 @@ class Preorder(models.Model):
 
             # Mise à jour des champs du bon de commande
             order.payment_line_ids = payment_lines
+            order.payment_count = len(payment_lines)
             order.amount_payed = order.amount_total - computed_amount_residual
             order.amount_residual = computed_amount_residual
             order.advance_payment_status = payment_state
