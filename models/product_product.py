@@ -226,9 +226,9 @@ class Product(models.Model):
             else:
                 product.is_preorder_allowed = False
                 
-    image_count = fields.Integer("Nombre d'images", compute="_compute_image_count", store=True, help="Total number of images associated with this product.")
+    # image_count = fields.Integer("Nombre d'images", compute="_compute_image_count", store=True, help="Total number of images associated with this product.")
     
-    def _compute_image_count(self):
-        """Get the image from the template if no image is set on the variant."""
-        for record in self:
-            record.image_count = record.product_tmpl_id.image_count
+    # def _compute_image_count(self):
+    #     """Get the image from the template if no image is set on the variant."""
+    #     for record in self:
+    #         record.image_count = record.product_tmpl_id.image_count

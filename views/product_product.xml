@@ -80,7 +80,8 @@
     <record id="view_preorder_product_product_stock_tree" model="ir.ui.view">
         <field name="name">product.product.tree.inherited</field>
         <field name="model">product.product</field>
-        <field name="inherit_id" ref="product.product_product_tree_view"/>
+        <!-- <field name="inherit_id" ref="product.product_product_tree_view"/> -->
+        <field name="inherit_id" ref="product.product_template_tree_view"/>
         <field name="arch" type="xml">
             <field name="type" position="after">
                 <field name="is_preorder" optional="hide" string="Précommandé"/>
