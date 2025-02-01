@@ -52,6 +52,33 @@ class ProductTemplate(models.Model):
     image_2 = fields.Binary(string='Image 2')
     image_3 = fields.Binary(string='Image 3')
     image_4 = fields.Binary(string='Image 4')
+    
+    image_count = fields.Integer("Nombre d'images", compute="_compute_image_count", store=True, help="Total number of images associated with this product.")
+    
+    @api.depends('image_1920', 'product_variant_ids.image_variant_1920', 'image_1', 'image_2', 'image_3', 'image_4')
+    def _compute_image_count(self):
+        for template in self:
+            # Comptage des images du template
+            images = [template.image_1920, template.image_1, template.image_2, template.image_3, template.image_4]
+            count = sum(1 for image in images if image)
+
+            # Comptage des images des variantes
+            count += len(template.product_variant_ids.filtered(lambda p: p.image_variant_1920))
+            template.image_count = count
+            
+    # def write(self, vals):
+    #     """ Met à jour le compteur d'images à chaque modification """
+    #     res = super(ProductTemplate, self).write(vals)
+    #     if any(field in vals for field in ['image_1920', 'image_1', 'image_2', 'image_3', 'image_4']):
+    #         self._compute_image_count()
+    #     return res
+    
+    @api.model
+    def cron_update_image_count(self):
+        """ Recalcul périodique du nombre d'images via une tâche cron """
+        products = self.search([])
+        products._compute_image_count()
+        self._cr.commit()  # Forcer la sauvegarde en base pour éviter les pertes si la tâche plante
             
     @api.depends('rate_price')
     def _compute_promo_price(self):
@@ -125,6 +152,7 @@ class ProductTemplate(models.Model):
 
 class Product(models.Model):
     _inherit = 'product.product'
+
     
     # qty_available, virtual_available, free_qty, incoming_qty, outgoing_qty
     qty_available = fields.Float(
@@ -198,31 +226,9 @@ class Product(models.Model):
             else:
                 product.is_preorder_allowed = False
                 
-                
     image_count = fields.Integer("Nombre d'images", compute="_compute_image_count", store=True, help="Total number of images associated with this product.")
     
-    @api.depends('image_1920', 'product_variant_ids.image_variant_1920', 'image_1', 'image_2', 'image_3', 'image_4')
     def _compute_image_count(self):
-        for template in self:
-            # Comptage des images du template
-            images = [template.image_1920, template.image_1, template.image_2, template.image_3, template.image_4]
-            count = sum(1 for image in images if image)
-
-            # Comptage des images des variantes
-            count += len(template.product_variant_ids.filtered(lambda p: p.image_variant_1920))
-            template.image_count = count
-            
-    # def write(self, vals):
-    #     """ Met à jour le compteur d'images à chaque modification """
-    #     res = super(ProductTemplate, self).write(vals)
-    #     if any(field in vals for field in ['image_1920', 'image_1', 'image_2', 'image_3', 'image_4']):
-    #         self._compute_image_count()
-    #     return res
-    
-    @api.model
-    def cron_update_image_count(self):
-        """ Recalcul périodique du nombre d'images via une tâche cron """
-        products = self.search([])
-        products._compute_image_count()
-        self._cr.commit()  # Forcer la sauvegarde en base pour éviter les pertes si la tâche plante
-    
+        """Get the image from the template if no image is set on the variant."""
+        for record in self:
+            record.image_count = record.product_tmpl_id.image_count
