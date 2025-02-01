@@ -57,18 +57,25 @@
                     </group>
                 </page>
                 <page string="Quantités">
-                    <group string="Quantitiés">
+                    <group string="Quantitiés stock">
                         <group>
                             <field name="qty_available" string="Quantité disponible" readonly="1"/>
                             <field name="incoming_qty" string="Quantité attendue" readonly="1"/>
                             <field name="virtual_available" string="Quantité prévisionnelle" readonly="1"/>
                         </group>
                         <group>
-                            <field name="ordered_qty" string="Quantité commandée" readonly="1"/>
-                            <field name="preordered_qty" string="Quantité précommandée" readonly="1"/>
+                            <field name="ordered_qty" string="Qté commandée" readonly="1"/>
+                            <field name="preordered_qty" string="Qté précommandée" readonly="1"/>
+                            <field name="creditorder_qty" string="Qté créditée" readonly="1"/>
+                        </group>
+                        <separator/>
+                        <group>
+                            <field name="outgoing_qty" string="Quantité total sortante" readonly="1"/>
+                            <field name="free_qty" string="Quantité Libre" readonly="1"/>
                             <field name="image_count" string="Nombre d'image" readonly="1"/>
-                            <!-- <field name="outgoing_qty" string="Quantité total sortante" readonly="1"/> -->
-                            <!-- <field name="free_qty" string="Quantité Libre" readonly="1"/> -->
+                        </group>
+                        <group>
+                            
                         </group>
                     </group>
                 </page>
