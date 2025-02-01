@@ -183,12 +183,11 @@
             <field name="model">sale.order</field>
             <field name="inherit_id" ref="sale.view_order_tree"/>
             <field name="arch" type="xml">
+
                 <field name="date_order" position="before">
-                    <field name="type_sale" optional="hide" widget="badge"/>
                     <field name="third_payment_amount" invisible="1"/>
-
+                    <field name="type_sale" optional="hide" widget="badge"/>
                 </field>
-
                 <!-- Insertion avant user_id -->
                 <field name="user_id" position="before">
 
@@ -211,21 +210,30 @@
                 </field>
 
                 <field name='amount_total' position="after">
-                    <field name="amount_payed" widget="monetary" optional="hide" sum="Total no payed"/>
-                    <field name="amount_residual"
-                           attrs="{'invisible': [('type_sale', '==', 'order')]}"
-                           decoration-danger="amount_residual &gt; third_payment_amount"
-                           widget="monetary"
-                           sum="Total amount residual"
+                    <field name="amount_payed" 
+                        string="Mt payé" 
+                        optional="hide" 
+                        widget="monetary" 
+                        sum="Total no payed"
+                        decoration-primary="type_sale == 'order'"
+                        decoration-success="type_sale == 'preorder'"
+                        decoration-muted="type_sale == 'creditorder'"
+                    />
+                    <field name="amount_residual" string="Mt Restant" 
+                        optional="hide"
+                        widget="monetary"
+                        sum="Total amount residual"
+                        decoration-primary="type_sale == 'order'"
+                        decoration-success="type_sale == 'preorder'"
+                        decoration-muted="type_sale == 'creditorder'"
                     />
                 </field>
                 <field name='invoice_status' position="before">
                     <field name="advance_payment_status"
-                           attrs="{'invisible': [('type_sale', '==', 'order')]}"
-                           decoration-success="advance_payment_status == 'paid'"
-                           decoration-info="advance_payment_status == 'partial'"
-                           decoration-warning="advance_payment_status == 'not_paid'"
-                           widget="badge"
+                        widget="badge"
+                        decoration-success="advance_payment_status == 'paid'"
+                        decoration-info="advance_payment_status == 'partial'"
+                        decoration-warning="advance_payment_status == 'not_paid'"
                     />
                 </field>
             </field>

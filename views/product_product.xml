@@ -68,7 +68,7 @@
                             <field name="preordered_qty" string="Qté précommandée" readonly="1"/>
                             <field name="creditorder_qty" string="Qté créditée" readonly="1"/>
                         </group>
-                        <separator/>
+                        
                         <group>
                             <field name="outgoing_qty" string="Quantité total sortante" readonly="1"/>
                             <field name="free_qty" string="Quantité Libre" readonly="1"/>
