@@ -52,6 +52,20 @@ class ProductTemplate(models.Model):
                                   help="Total quantity of products that have been ordered by customers but not yet delivered."
                                   )
     
+    free_qty = fields.Float(
+        'Free To Use Quantity ', related='product_variant_ids.free_qty',
+        digits='Product Unit of Measure', store=True,
+        help="Forecast quantity (computed as Quantity On Hand "
+             "- reserved quantity)\n"
+             "In a context with a single Stock Location, this includes "
+             "goods stored in this location, or any of its children.\n"
+             "In a context with a single Warehouse, this includes "
+             "goods stored in the Stock Location of this Warehouse, or any "
+             "of its children.\n"
+             "Otherwise, this includes goods stored in any Stock Location "
+             "with 'internal' type.")
+    
+    
     image_1 = fields.Binary(string='Image 1')
     image_2 = fields.Binary(string='Image 2')
     image_3 = fields.Binary(string='Image 3')
