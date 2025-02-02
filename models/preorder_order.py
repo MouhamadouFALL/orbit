@@ -116,13 +116,6 @@ class Preorder(models.Model):
 
 
     # ----------------------------------------------- Methodes ------------------------------------------------------
-    @api.model
-    def cron_due_orders(self):
-        # Récupérer toutes les commandes
-        orders = self.search([])
-        orders._compute_is_due()
-        
-        
         
     def validate_rh(self):
 
@@ -224,102 +217,81 @@ class Preorder(models.Model):
 
     # ------------------------------------------ computes methods ----------------------
     
-    @api.depends(
-        'first_payment_date', 'second_payment_date', 
-        'third_payment_date', 'fourth_payment_date',
-        'first_payment_state', 'second_payment_state', 
-        'third_payment_state', 'fourth_payment_state'
-    )
-    def _compute_is_due(self):
-        #current_date = fields.Date.today()
-        current_date = fields.Date.context_today(self)
+    @api.model
+    def cron_due_orders(self):
+        # Récupérer toutes les commandes
+        orders = self.search([])
+        orders._compute_is_due()
         
+    @api.depends('first_payment_date', 'first_payment_state', 'first_payment_amount',
+                 'second_payment_date', 'second_payment_state', 'second_payment_amount',
+                 'third_payment_date', 'third_payment_state', 'third_payment_amount',
+                 'fourth_payment_date', 'fourth_payment_state', 'fourth_payment_amount',
+                 'type_sale', 'validity_date', 'amount_residual', 'advance_payment_status')
+    def _compute_is_due(self):
+        current_date = fields.Date.context_today(self)
         for order in self:
-            relevant_diffs = []
-            overdue_total = 0.0
-            payment_data = [
-                (order.first_payment_date, order.first_payment_state, order.first_payment_amount),
-                (order.second_payment_date, order.second_payment_state, order.second_payment_amount),
-                (order.third_payment_date, order.third_payment_state, order.third_payment_amount),
-                (order.fourth_payment_date, order.fourth_payment_state, order.fourth_payment_amount)
-            ]
+            # Par défaut, on réinitialise les valeurs
+            order.state_due = 'not_due'
+            order.days_util_due = 0
+            order.overdue_amount = 0.0
 
+            # 1. Cas des commandes de type preorder et creditorder
             if order.type_sale in ['preorder', 'creditorder']:
-                for date, state, amount in payment_data:
-                    if date and not state:
-                        days_diff = (current_date - date).days
-                        
-                        # Vérifie si dans la fenêtre [-5 jours; +infini]
-                        #if days_diff >= -5:
+                relevant_diffs = []
+                overdue_total = 0.0
+                payment_data = [
+                    (order.first_payment_date, order.first_payment_state, order.first_payment_amount),
+                    (order.second_payment_date, order.second_payment_state, order.second_payment_amount),
+                    (order.third_payment_date, order.third_payment_state, order.third_payment_amount),
+                    (order.fourth_payment_date, order.fourth_payment_state, order.fourth_payment_amount)
+                ]
+                for pay_date, pay_state, pay_amount in payment_data:
+                    # On considère uniquement les échéances ayant une date et dont l'état n'est pas renseigné (non payé)
+                    if pay_date and not pay_state:
+                        days_diff = (current_date - pay_date).days
                         relevant_diffs.append(days_diff)
-                        
-                        # Cumule uniquement les montants échus
+                        # Si l'échéance est dépassée (days_diff >= 0), on cumule le montant correspondant
                         if days_diff >= 0:
-                            overdue_total += amount
+                            overdue_total += pay_amount
 
-                # Détermine l'état et les valeurs
                 if relevant_diffs:
+                    # S'il y a au moins une échéance dépassée, on considère la commande comme due
                     overdue_diffs = [d for d in relevant_diffs if d > 0]
-                    # become_overdue_diffs = [d for d in relevant_diffs if d >=-5 and d < 0]
-                    
                     if overdue_diffs:
                         order.state_due = 'due'
-                        # Prend le retard le plus important
+                        # On prend le retard maximal pour information
                         order.days_util_due = max(overdue_diffs)
                         order.overdue_amount = overdue_total
                     else:
-                        order.state_due = 'not_due' #+ 
-                        # Prend l'échéance la plus proche
+                        # Dans le cas où les échéances ne sont pas encore dépassées
+                        order.state_due = 'not_due'
                         order.days_util_due = max(relevant_diffs)
-                    
-                    # order.overdue_amount = overdue_total
-                else:
-                    order.state_due = 'not_due'
-                    order.days_util_due = 0
-                    order.overdue_amount = 0.0
+                        order.overdue_amount = 0.0
+
+            # 2. Cas des commandes de type order
+            elif order.type_sale == 'order' and order.validity_date:
+                # Si la date de validité est dépassée
+                if order.validity_date < current_date:
+                    # Et s'il reste un solde dû ou que le statut de paiement n'est pas "paid"
+                    if order.amount_residual > 0 or order.advance_payment_status != 'paid':
+                        order.state_due = 'due'
+                        # Le nombre de jours en retard est calculé depuis la date de validité
+                        order.days_util_due = (current_date - order.validity_date).days
+                        # Ici, on considère le montant restant dû comme montant en retard
+                        order.overdue_amount = order.amount_residual
+                    else:
+                        # Si le solde est réglé, on ne considère pas la commande comme due
+                        order.state_due = 'not_due'
+                        order.days_util_due = 0
+                        order.overdue_amount = 0.0
+
+            # 3. Pour les autres cas, on laisse les valeurs par défaut : non due
             else:
                 order.state_due = 'not_due'
                 order.days_util_due = 0
-                order.overdue_amount = 0.0
+                order.overdue_amount = 0.0    
         
-        
-        # for order in self:
-            
-        #     days_diff = 0
-        #     overdue_total = 0
-                
-        #     if order.type_sale in ['preorder', 'creditorder']:
-        #         # Vérifie chaque date et état de paiement
-                
-        #         if order.first_payment_date and not order.first_payment_state and order.first_payment_date < current_date:
-        #             days_diff += (current_date - order.first_payment_date).days
-        #             order.state_due = 'due'
-                    
-        #             overdue_total += order.first_payment_amount
-                
-        #         if order.second_payment_date and not order.second_payment_state and order.second_payment_date < current_date:
-        #             days_diff += (current_date - order.second_payment_date).days
-        #             order.state_due = 'due'
-                    
-        #             overdue_total += order.second_payment_amount
-                
-        #         if order.third_payment_date and not order.third_payment_state and order.third_payment_date < current_date:
-        #             days_diff += (current_date - order.third_payment_date).days
-        #             order.state_due = 'due'
-                    
-        #             overdue_total += order.third_payment_amount
-                
-        #         if order.fourth_payment_date and not order.fourth_payment_state and order.fourth_payment_date < current_date:
-        #             days_diff += (current_date - order.fourth_payment_date).days
-        #             order.state_due = 'due'
-                    
-        #             overdue_total += order.fourth_payment_amount
-        #     else:
-        #         # Vérifie chaque date et état de paiement
-        #         order.state_due = 'not_due'
-                
-        #     order.days_util_due = days_diff
-        #     order.overdue_amount = overdue_total
                     
     @api.depends(
             'order_line.price_subtotal', 
@@ -630,4 +602,70 @@ class Preorder(models.Model):
             elif order.delivery_status == 'full':
                return order.write({ 'state': 'delivered' })
             
+    # -------------------------------------------------- Envoyer un email de rappel -------------------------------------
+    
+    @api.model
+    def action_send_due_emails(self):
+        """ 
+        Envoie :
+          - Pour les commandes de type 'preorder' et 'creditorder' :
+              * Un email informatif 2 jours avant une date d'échéance (sur l'une des échéances de paiement non réglées).
+              * Un email de rappel 5 jours après, si la commande est échu (state_due = 'due' et délai de retard >= 5 jours).
+          - Pour les commandes de type 'order' :
+              * Un email de rappel 3 jours après la date d'échéance (basé sur validity_date) si la commande est échu.
+        """
+        current_date = fields.Date.context_today(self)
+        sale_order_obj = self.env['sale.order']
+
+        # --- Pour les commandes de type 'preorder' et 'creditorder' ---
+        orders_pre = sale_order_obj.search([
+            ('type_sale', 'in', ['preorder', 'creditorder']),
+            # On peut affiner la recherche éventuellement sur les commandes non payées
+        ])
+
+        for order in orders_pre:
+            # 1. Email informatif 2 jours AVANT l'échéance pour une échéance non encore réglée.
+            # On vérifie pour chacune des échéances de paiement renseignées.
+            send_informative = False
+            payment_dates = [
+                (order.first_payment_date, order.first_payment_state),
+                (order.second_payment_date, order.second_payment_state),
+                (order.third_payment_date, order.third_payment_state),
+                (order.fourth_payment_date, order.fourth_payment_state)
+            ]
+            for pay_date, pay_state in payment_dates:
+                if pay_date and not pay_state:
+                    # Si la date d'échéance est dans 2 jours exactement
+                    if (pay_date - current_date).days == 2:
+                        send_informative = True
+                        break
+
+            if send_informative:
+                # On utilise un modèle d'email préconfiguré pour l'information
+                template = self.env.ref('orbit.preorder_creditorder_informative_template', raise_if_not_found=False)
+                if template:
+                    template.send_mail(order.id, force_send=True)
+
+            # 2. Email de rappel 5 jours APRÈS l'échéance si la commande est échu
+            # On se base sur le champ calculé "days_util_due" qui indique le nombre de jours de retard
+            if order.state_due == 'due' and order.days_util_due >= 5:
+                template = self.env.ref('orbit.preorder_creditorder_reminder_template', raise_if_not_found=False)
+                if template:
+                    template.send_mail(order.id, force_send=True)
+
+        # --- Pour les commandes de type 'order' ---
+        orders_order = sale_order_obj.search([
+            ('type_sale', '=', 'order'),
+            ('validity_date', '!=', False),  # On s'assure que la date d'échéance est renseignée
+            ('state_due', '=', 'due')
+        ])
+        for order in orders_order:
+            # Si la commande est échue, on envoie un email 3 jours APRÈS la date d'échéance (validity_date)
+            if (current_date - order.validity_date).days >= 3:
+                template = self.env.ref('orbit.order_overdue_reminder_template', raise_if_not_found=False)
+                if template:
+                    template.send_mail(order.id, force_send=True)
+                    
+        
+
 

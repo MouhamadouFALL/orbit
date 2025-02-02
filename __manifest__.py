@@ -22,8 +22,9 @@
         'security/ir.model.access.csv',
         
         # ***************************** actions planifier ****************
-        'data/orders_due_ir_cron_data.xml',
         'data/cron_update_image_count.xml',
+        'data/cron_sale_order.xml',
+        'data/preorder_creditorder_inf_remind_email.xml',
 
         'wizard/preorder_advance_payment_wzd_view.xml',
         'wizard/crm_opportunity_to_quotation_orbit_views.xml',

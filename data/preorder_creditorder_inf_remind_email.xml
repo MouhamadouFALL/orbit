@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="0">
+
+        <!-- Modèle d'Email de Rappel pour une commande (order) échue (3 jours après échéance) -->
+        <record id="order_overdue_reminder_template" model="mail.template">
+            <field name="name">Commande standard: Rappel retard paiement</field>
+            <field name="model_id" ref="orbit.model_sale_order"/>
+            <field name="subject">CCBMSHOP - Paiement en retard pour votre commande {{object.name}}</field>
+            <field name="email_from">{{ object.company_id.email or 'ccbmshop.orbitcity@ccbm.sn' }}</field>
+            <field name="partner_to">{{ object.partner_id.id }}</field>
+            <field name="body_html" type="html">
+                
+                    <div style="margin:0; padding:0;">
+                        <p style="font-size: 13px;">
+                            Bonjour <strong><t t-esc="object.partner_id.name"/></strong>,<br/><br/>
+                            Nous constatons que le paiement de votre commande <strong><t t-esc="object.name"/></strong>
+                            est en retard depuis le <strong><t t-esc="object.validity_date"/></strong>.<br/>
+                            Montant dû : <strong><t t-esc="object.amount_residual"/> <t t-esc="object.currency_id.name"/></strong>.<br/><br/>
+                            Merci d’effectuer le règlement.<br/>
+                            Si le paiement a déjà été effectué, merci d’ignorer cet email.<br/><br/>
+                            Cordialement,<br/>
+                            <strong><t t-esc="object.company_id.name"/></strong>
+                        </p>
+                    </div>
+
+            </field>
+            <field name="auto_delete" eval="True"/>
+        </record>
+
+        <!-- Modèle d'Email de Rappel pour les commandes à crédit / précommandes (5 jours après échéance) -->
+        <record id="preorder_creditorder_reminder_template" model="mail.template">
+            <field name="name">Preorder/Creditorder: Rappel retard paiement</field>
+            <field name="model_id" ref="orbit.model_sale_order"/>
+            <field name="subject">CCBMSHOP - Retard de paiement pour votre {{ object.type_sale }} {{object.name}} </field>
+            <field name="email_from">{{ object.company_id.email or 'ccbmshop.orbitcity@ccbm.sn' }}</field>
+            <field name="partner_to"> {{ object.partner_id.id }} </field>
+            <field name="body_html" type="html">
+
+                    <div style="margin:0; padding:0;">
+                        <p style="font-size: 13px;">
+                            Bonjour <strong><t t-esc="object.partner_id.name"/></strong>,<br/><br/>
+                            Nous constatons que le paiement de votre <t t-esc="object.type_sale"/> <strong><t t-esc="object.name"/></strong> est en retard.<br/>
+                            Les échéances suivantes sont dépassées :
+                        </p>
+                        <table style="border-collapse: collapse; width: 100%; font-size: 13px;">
+                            <thead>
+                                <tr>
+                                    <th style="border: 1px solid #ccc; padding: 5px; text-align: left;">Date d'échéance</th>
+                                    <th style="border: 1px solid #ccc; padding: 5px; text-align: left;">Montant à payer</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-set="payment_lines" t-value="[]"/>
+                                <t t-if="object.first_payment_date and not object.first_payment_state">
+                                    <t t-set="payment_lines" t-value="payment_lines + [{'date': object.first_payment_date, 'amount': object.first_payment_amount}]"/>
+                                </t>
+                                <t t-if="object.second_payment_date and not object.second_payment_state">
+                                    <t t-set="payment_lines" t-value="payment_lines + [{'date': object.second_payment_date, 'amount': object.second_payment_amount}]"/>
+                                </t>
+                                <t t-if="object.third_payment_date and not object.third_payment_state">
+                                    <t t-set="payment_lines" t-value="payment_lines + [{'date': object.third_payment_date, 'amount': object.third_payment_amount}]"/>
+                                </t>
+                                <t t-if="object.fourth_payment_date and not object.fourth_payment_state">
+                                    <t t-set="payment_lines" t-value="payment_lines + [{'date': object.fourth_payment_date, 'amount': object.fourth_payment_amount}]"/>
+                                </t>
+                                <t t-foreach="payment_lines" t-as="line">
+                                    <tr>
+                                        <td style="border: 1px solid #ccc; padding: 5px;">
+                                            <t t-esc="line['date']"/>
+                                        </td>
+                                        <td style="border: 1px solid #ccc; padding: 5px;">
+                                            <t t-esc="line['amount']"/> <t t-esc="object.currency_id.name"/>
+                                        </td>
+                                    </tr>
+                                </t>
+                            </tbody>
+                        </table>
+                        <p style="font-size: 13px; margin-top: 10px;">
+                            Montant total dû : <strong><t t-esc="object.amount_residual"/> <t t-esc="object.currency_id.name"/></strong>.<br/><br/>
+                            Merci d'effectuer le règlement dès que possible.<br/>
+                            Si le paiement a déjà été effectué, merci d'ignorer cet email.<br/><br/>
+                            Cordialement,<br/>
+                            <strong><t t-esc="object.company_id.name"/></strong>
+                        </p>
+                    </div>
+                </field>
+            <field name="auto_delete" eval="True"/>
+        </record>
+
+        <!-- Modèle d'Email Informatif pour Preorder/Creditorder (2 jours avant échéance) -->
+        <record id="preorder_creditorder_informative_template" model="mail.template">
+            <field name="name">Preorder/Creditorder: Rappel échéance (2 jours avant)</field>
+            <field name="model_id" ref="orbit.model_sale_order"/>
+            <field name="subject">CCBMSHOP - Rappel échéance pour votre {{ object.type_sale }} {{ object.name }}</field>
+            <field name="email_from">{{ object.company_id.email or 'ccbmshop.orbitcity@ccbm.sn' }}</field>
+            <field name="partner_to">{{ object.partner_id.id }} </field>
+            <field name="body_html" type="html">
+
+                    <div style="margin:0; padding:0;">
+                        <p style="font-size: 13px;">
+                            Bonjour <strong><t t-esc="object.partner_id.name"/></strong>,<br/><br/>
+                            Ceci est un rappel que le paiement de votre <t t-esc="object.type_sale"/> 
+                            <strong><t t-esc="object.name"/></strong> arrive à échéance dans 2 jours.<br/><br/>
+                            Veuillez trouver ci-dessous les échéances concernées :
+                        </p>
+                        <table style="border-collapse: collapse; width: 100%; font-size: 13px;">
+                            <thead>
+                                <tr>
+                                    <th style="border: 1px solid #ccc; padding: 5px; text-align: left;">Date d'échéance</th>
+                                    <th style="border: 1px solid #ccc; padding: 5px; text-align: left;">Montant à payer</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <t t-set="upcoming_payment_lines" t-value="[]"/>
+                                <t t-if="object.first_payment_date and not object.first_payment_state">
+                                    <t t-set="upcoming_payment_lines" t-value="upcoming_payment_lines + [{'date': object.first_payment_date, 'amount': object.first_payment_amount}]"/>
+                                </t>
+                                <t t-if="object.second_payment_date and not object.second_payment_state">
+                                    <t t-set="upcoming_payment_lines" t-value="upcoming_payment_lines + [{'date': object.second_payment_date, 'amount': object.second_payment_amount}]"/>
+                                </t>
+                                <t t-if="object.third_payment_date and not object.third_payment_state">
+                                    <t t-set="upcoming_payment_lines" t-value="upcoming_payment_lines + [{'date': object.third_payment_date, 'amount': object.third_payment_amount}]"/>
+                                </t>
+                                <t t-if="object.fourth_payment_date and not object.fourth_payment_state">
+                                    <t t-set="upcoming_payment_lines" t-value="upcoming_payment_lines + [{'date': object.fourth_payment_date, 'amount': object.fourth_payment_amount}]"/>
+                                </t>
+                                <t t-foreach="upcoming_payment_lines" t-as="line">
+                                    <tr>
+                                        <td style="border: 1px solid #ccc; padding: 5px;">
+                                            <t t-esc="line['date']"/>
+                                        </td>
+                                        <td style="border: 1px solid #ccc; padding: 5px;">
+                                            <t t-esc="line['amount']"/> <t t-esc="object.currency_id.name"/>
+                                        </td>
+                                    </tr>
+                                </t>
+                            </tbody>
+                        </table>
+                        <p style="font-size: 13px; margin-top: 10px;">
+                            Merci d'effectuer le règlement dans les délais afin d'éviter toute interruption dans le traitement de votre commande.<br/><br/>
+                            Restant à votre disposition pour toute question.<br/><br/>
+                            Cordialement,<br/>
+                            <strong><t t-esc="object.company_id.name"/></strong>
+                        </p>
+                    </div>
+            </field>
+            <field name="auto_delete" eval="True"/>
+        </record>
+
+    </data>
+</odoo>

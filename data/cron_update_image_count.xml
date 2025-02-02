@@ -1,14 +1,15 @@
 <odoo>
+    <!-- Cron Job pour Recalculer le nombre d'images d'un produits des la mise à jour -->
     <data noupdate="1">
         <record id="ir_cron_update_image_count" model="ir.cron">
             <field name="name">Recalcul du nombre d'images des produits</field>
             <field name="model_id" ref="model_product_template"/>
             <field name="state">code</field>
             <field name="code">model.cron_update_image_count()</field>
-            <field name="user_id" ref="base.user_root"/>  <!-- Exécuté en tant que superadmin -->
+            <field name="user_id" ref="base.user_root"/>
             <field name="interval_number">5</field>
             <field name="interval_type">minutes</field>
-            <field name="numbercall">5</field>  <!-- Répétition infinie -->
+            <field name="numbercall">3</field>
             <field name="active" eval="True"/>
         </record>
     </data>
