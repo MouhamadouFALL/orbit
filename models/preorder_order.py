@@ -636,7 +636,7 @@ class Preorder(models.Model):
             for pay_date, pay_state in payment_dates:
                 if pay_date and not pay_state:
                     # Si la date d'échéance est dans 2 jours exactement
-                    if (pay_date - current_date).days == 2:
+                    if (pay_date - current_date).days < 0 and (pay_date - current_date).days >= -2:
                         send_informative = True
                         break
 

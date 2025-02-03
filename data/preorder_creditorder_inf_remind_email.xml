@@ -1,16 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <data noupdate="0">
+    <data noupdate="1">
 
         <!-- Modèle d'Email de Rappel pour une commande (order) échue (3 jours après échéance) -->
         <record id="order_overdue_reminder_template" model="mail.template">
-            <field name="name">Commande standard: Rappel retard paiement</field>
+            <field name="name">CCBMSHOP - Commande standard: Rappel retard paiement</field>
             <field name="model_id" ref="orbit.model_sale_order"/>
             <field name="subject">CCBMSHOP - Paiement en retard pour votre commande {{object.name}}</field>
             <field name="email_from">{{ object.company_id.email or 'ccbmshop.orbitcity@ccbm.sn' }}</field>
             <field name="partner_to">{{ object.partner_id.id }}</field>
             <field name="body_html" type="html">
                 
+                    <!-- Bloc Logo en haut de l'email -->
+                    <div style="text-align:center; margin-bottom:15px;">
+                        <img t-att-src="'/logo.png?company_id=%s' % (object.company_id.id or 0)" style="max-width:200px;" t-att-alt="'Logo %s' % object.company_id.name"/>
+                    </div>
+
+                    <!-- Bloc de texte -->
                     <div style="margin:0; padding:0;">
                         <p style="font-size: 13px;">
                             Bonjour <strong><t t-esc="object.partner_id.name"/></strong>,<br/><br/>
@@ -30,18 +36,24 @@
 
         <!-- Modèle d'Email de Rappel pour les commandes à crédit / précommandes (5 jours après échéance) -->
         <record id="preorder_creditorder_reminder_template" model="mail.template">
-            <field name="name">Preorder/Creditorder: Rappel retard paiement</field>
+            <field name="name">CCBMSHOP - Pré/Crédit Commande: Rappel retard paiement</field>
             <field name="model_id" ref="orbit.model_sale_order"/>
-            <field name="subject">CCBMSHOP - Retard de paiement pour votre {{ object.type_sale }} {{object.name}} </field>
+            <field name="subject">CCBMSHOP - Retard de paiement pour votre {{ (object.type_sale == 'preorder') and 'Précommande' or 'Commande Crédit' }} {{object.name}} </field>
             <field name="email_from">{{ object.company_id.email or 'ccbmshop.orbitcity@ccbm.sn' }}</field>
             <field name="partner_to"> {{ object.partner_id.id }} </field>
             <field name="body_html" type="html">
 
+                    <!-- Bloc Logo en haut de l'email (affiché en inline via base64) -->
+                    <div style="text-align:center; margin-bottom:15px;">
+                        <img t-att-src="'/logo.png?company_id=%s' % (object.company_id.id or 0)" style="max-width:200px;" t-att-alt="'Logo %s' % object.company_id.name"/>
+                    </div>
+
+                    <!-- Bloc de texte -->
                     <div style="margin:0; padding:0;">
                         <p style="font-size: 13px;">
                             Bonjour <strong><t t-esc="object.partner_id.name"/></strong>,<br/><br/>
-                            Nous constatons que le paiement de votre <t t-esc="object.type_sale"/> <strong><t t-esc="object.name"/></strong> est en retard.<br/>
-                            Les échéances suivantes sont dépassées :
+                            Nous constatons que le paiement de votre <t t-esc="object.get_type_sale_label()"/> <strong><t t-esc="object.name"/></strong> est en retard.<br/>
+                            Les échéances suivantes ne sont pas encore réglées :
                         </p>
                         <table style="border-collapse: collapse; width: 100%; font-size: 13px;">
                             <thead>
@@ -90,18 +102,24 @@
 
         <!-- Modèle d'Email Informatif pour Preorder/Creditorder (2 jours avant échéance) -->
         <record id="preorder_creditorder_informative_template" model="mail.template">
-            <field name="name">Preorder/Creditorder: Rappel échéance (2 jours avant)</field>
+            <field name="name">CCBMSHOP - Pré/Crédit Commande: Rappel échéance (2 jours avant)</field>
             <field name="model_id" ref="orbit.model_sale_order"/>
-            <field name="subject">CCBMSHOP - Rappel échéance pour votre {{ object.type_sale }} {{ object.name }}</field>
+            <field name="subject">CCBMSHOP - Rappel échéance pour votre {{ (object.type_sale == 'preorder') and 'Précommandes' or 'Commande Crédit' }}  {{ object.name }}</field>
             <field name="email_from">{{ object.company_id.email or 'ccbmshop.orbitcity@ccbm.sn' }}</field>
             <field name="partner_to">{{ object.partner_id.id }} </field>
             <field name="body_html" type="html">
 
+                    <!-- Bloc Logo en haut de l'email (affiché en inline via base64) -->
+                    <div style="text-align:center; margin-bottom:15px;">
+                        <img t-att-src="'/logo.png?company_id=%s' % (object.company_id.id or 0)" style="max-width:200px;" t-att-alt="'Logo %s' % object.company_id.name"/>
+                    </div>
+
+                    <!-- Bloc de texte -->
                     <div style="margin:0; padding:0;">
                         <p style="font-size: 13px;">
                             Bonjour <strong><t t-esc="object.partner_id.name"/></strong>,<br/><br/>
                             Ceci est un rappel que le paiement de votre <t t-esc="object.type_sale"/> 
-                            <strong><t t-esc="object.name"/></strong> arrive à échéance dans 2 jours.<br/><br/>
+                            <strong><t t-esc="object.name"/></strong> arrive à échéance dans <t t-esc="object.days_util_due"/> jour(s).<br/><br/>
                             Veuillez trouver ci-dessous les échéances concernées :
                         </p>
                         <table style="border-collapse: collapse; width: 100%; font-size: 13px;">
@@ -138,7 +156,8 @@
                             </tbody>
                         </table>
                         <p style="font-size: 13px; margin-top: 10px;">
-                            Merci d'effectuer le règlement dans les délais afin d'éviter toute interruption dans le traitement de votre commande.<br/><br/>
+                            Montant total dû : <strong><t t-esc="object.amount_residual"/> <t t-esc="object.currency_id.name"/></strong>.<br/><br/>
+                            Merci d'effectuer le règlement dans les délais.<br/><br/>
                             Restant à votre disposition pour toute question.<br/><br/>
                             Cordialement,<br/>
                             <strong><t t-esc="object.company_id.name"/></strong>
