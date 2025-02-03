@@ -91,8 +91,6 @@ class SaleOrder(models.Model):
 
     usr_confirmed = fields.Many2one('res.users', string="Confirmé par", readonly=True)
     
-    def get_type_sale_label(self):
-        return dict(self._fields['type_sale'].selection).get(self.type_sale)
     
     @api.model_create_multi
     def create(self, vals_list):

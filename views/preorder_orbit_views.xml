@@ -200,7 +200,7 @@
                         decoration-warning="days_util_due &lt;= 5 and days_util_due &gt; 0"
                         decoration-danger="days_util_due &gt; 5"
                     />
-                    <field name="overdue_amount" string="MT Échu" widget="badget" optional="hide"
+                    <field name="overdue_amount" string="MT Échu" sum="Total échu" widget="badget" optional="hide"
                         decoration-success="days_util_due &lt; -5"
                         decoration-info="days_util_due &lt; 0"
                         decoration-warning="days_util_due &lt;= 5 and days_util_due &gt; 0"
