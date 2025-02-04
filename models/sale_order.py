@@ -75,6 +75,8 @@ class SaleOrder(models.Model):
 
         return selection
 
+    active = fields.Boolean("Active", default=True)
+    
     # type de vente (type de business)
     type_sale = fields.Selection(
         selection=TYPE_SALE,
