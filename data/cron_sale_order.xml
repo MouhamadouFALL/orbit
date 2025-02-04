@@ -4,7 +4,7 @@
 
         <!-- Tâche planifiée pour recupérer les commandes échues -->
         <record id="ir_cron_orders_due" model="ir.cron">
-            <field name="name">CCBMSHOP: Repérer les commandes échues</field>
+            <field name="name">CCBMSHOP: Repérer les commandes  échues/à échoire</field>
             <field name="model_id" ref="model_sale_order"/>
             <field name="state">code</field>
             <field name="code">model.cron_due_orders()</field>

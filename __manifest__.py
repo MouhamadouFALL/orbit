@@ -23,6 +23,7 @@
         
         # ***************************** actions planifier ****************
         'data/cron_update_image_count.xml',
+        'data/cron_tag_order_overdue.xml',
         # 'data/cron_sale_order.xml',
         # 'data/preorder_creditorder_inf_remind_email.xml',
 
