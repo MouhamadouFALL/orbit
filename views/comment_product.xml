@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- ############################## Vue Commentaire sur un Produit ############################## -->
+
+    <!-- ************************************** View List (tree)  ************************************ -->
+    <record id="view_comments_tree" model="ir.ui.view">
+        <field name="name">view.comments.products.tree</field>
+        <field name="model">web.commentaire</field>
+        <field name="arch" type="xml">
+            <tree string="Commentaires Produit">
+                <field name="author" />
+                <field name="text" />
+                <field name="date" />
+                <field name="product_id" />
+                <field name="review" />
+            </tree>
+        </field>
+    </record>
+
+    <!-- ************************************** View Formulaire (form)  ************************************ -->
+    <record id="view_comments_form" model="ir.ui.view">
+        <field name="name">web.commentaire.form</field>
+        <field name="model">web.commentaire</field>
+        <field name="arch" type="xml">
+            <form string="Commentaires Produit">
+                <sheet>
+                    <group>
+
+                        <group>
+                            <field name="author" />
+                            <field name="text" />
+                            <field name="date" />
+                        </group>
+                        <group>
+                            <field name="product_id" />
+                            <field name="review" />
+                        </group>
+                        
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+
+    <!-- ############################## Vue Commentaire globale sur tous les Produit ############################## -->
+
+    <!-- ************************************** View List (tree)  ************************************ -->
+    <record id="view_comments_simple_tree" model="ir.ui.view">
+        <field name="name">web.commentaire.simple.tree</field>
+        <field name="model">web.commentaire.simple</field>
+        <field name="arch" type="xml">
+            <tree string="Commentaires Simples produits">
+                <field name="author" />
+                <field name="text" />
+                <field name="date" />
+            </tree>
+        </field>
+    </record>
+
+    <!-- ************************************** View Formulaire (form)  ************************************ -->
+    <record id="view_comments_simple_form" model="ir.ui.view">
+        <field name="name">web.commentaire.simple.form</field>
+        <field name="model">web.commentaire.simple</field>
+        <field name="arch" type="xml">
+            <form string="Commentaires Simples">
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="author" />
+                            <field name="text" />
+                            <field name="date" />
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <!-- Actions -->
+    <record id="action_comment_on_product" model="ir.actions.act_window">
+        <field name="name">Commentaires Produits</field>
+        <field name="res_model">web.commentaire</field>
+        <field name="view_mode">tree,form</field>
+        <field name="view_id" ref="view_comments_tree" />
+    </record>
+    <record id="action_comments_simple" model="ir.actions.act_window">
+        <field name="name">Commentaires Simples</field>
+        <field name="res_model">web.commentaire.simple</field>
+        <field name="view_mode">tree,form</field>
+        <field name="view_id" ref="view_comments_simple_tree" />
+    </record>
+
+    
+</odoo>

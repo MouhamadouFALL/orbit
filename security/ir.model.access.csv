@@ -17,3 +17,5 @@ access_account_payment_user,sale.order.manager,model_account_payment,orbit.emp_g
 access_account_payment_caisse,sale.order.caisse,model_account_payment,orbit.caisse_group_user,1,1,1,1
 
 access_crm_type_sale,crm.type.sale,model_crm_type_sale,sales_team.group_sale_manager,1,1,1,1
+access_web_commentaire,crm.type.sale,model_web_commentaire,base.group_user,1,1,1,1
+access_web_commentaire_simple,crm.type.sale,model_web_commentaire_simple,base.group_user,1,1,1,1

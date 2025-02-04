@@ -5,9 +5,25 @@
 
         <!-- Menu CRM -->
         <menuitem id="orbit_menu_crm" name="CRM" sequence="5">
-            <menuitem id="orbit_crm_menu" name="CRM" action="crm.crm_lead_action_pipeline" 
-            groups="orbit.sale_ccbmshop_group_user,orbit.com_group_user"
-            sequence="1"/>
+
+            <menuitem 
+                id="orbit_crm_menu" 
+                name="CRM" 
+                action="crm.crm_lead_action_pipeline" 
+                groups="orbit.sale_ccbmshop_group_user,orbit.com_group_user"
+                sequence="1"
+            />
+
+            <!-- Menu Commentaires sur les produits -->
+            <menuitem id="menu_comments" name="Commentaires Produits" 
+                action="action_comment_on_product" 
+                groups="orbit.sale_ccbmshop_group_user,orbit.com_group_user" 
+                sequence="10" />
+            <menuitem id="menu_comments_simple" name="Commentaires Simples" 
+                action="action_comments_simple" 
+                groups="orbit.sale_ccbmshop_group_user,orbit.com_group_user" 
+                sequence="20"/>
+
         </menuitem>
 
         <!-- Menu Operations -->

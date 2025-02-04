@@ -31,6 +31,7 @@
         'wizard/crm_type_sale_for_quotation_views.xml',
 
         # ***************************** Dossier views *******************
+        'views/comment_product.xml',
         'views/orbit_purchase_order.xml',
         'views/res_users_views.xml',
         'views/ir_ui_menu_views.xml',
