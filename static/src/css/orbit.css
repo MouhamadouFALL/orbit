@@ -1,0 +1,16 @@
+
+/* Exemple : changer la couleur de fond du menu principal */
+.o_main_navbar {
+    background-color: #005f8d !important; /* couleur de fond personnalisée */
+}
+
+/* Exemple : changer la couleur des liens dans le menu */
+.o_menu_sections a {
+    color: #ffffff !important; /* couleur du texte en blanc */
+}
+
+/* Exemple : changer la couleur de survol des éléments du menu */
+.o_menu_sections a:hover {
+    background-color: #007bb5 !important;
+    color: #ffffff !important;
+}

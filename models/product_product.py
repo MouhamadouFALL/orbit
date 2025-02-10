@@ -26,8 +26,10 @@ class ProductTemplate(models.Model):
         help="Prix pour les commandes à crédit. Ce prix sera appliqué lorsqu'un produit est disponible pour une commande à crédit."
     )
 
-    # champs pour la promotion
+    # ------------------ Gestion des prix sur le produit ------------------
+    # gestion des prix du produit en promotion
     en_promo = fields.Boolean(string="En promo", default=False, store=True)
+    rate_price = fields.Float("Taux de promotion")
 
     promo_price = fields.Float(
         'Promo Price',
@@ -37,8 +39,6 @@ class ProductTemplate(models.Model):
         readonly=False,
         store=True
     )
-
-    rate_price = fields.Float("Taux de promotion")
 
     preordered_qty = fields.Float('Preordered Quantity', compute='_compute_preordered_qty', store=True, 
                                   help="Total quantity of products that have been preordered by customers but not yet delivered."
@@ -66,13 +66,88 @@ class ProductTemplate(models.Model):
              "with 'internal' type.")
     
     
+    # ------------------ Gestion des images pour les produits et les variantes de produits ------------------ 
     image_1 = fields.Binary(string='Image 1')
     image_2 = fields.Binary(string='Image 2')
     image_3 = fields.Binary(string='Image 3')
     image_4 = fields.Binary(string='Image 4')
     
+    # Nombre d'images enregistré pour un produit
     image_count = fields.Integer("Nombre d'images", compute="_compute_image_count", store=True, help="Total number of images associated with this product.")
     
+    # ------------------ Gestion des prix sur le produit ------------------
+    
+    # gestion du prix de vente du produit
+    markup_percentage = fields.Float(
+        string="Marge (%)",
+        default=lambda self: self._get_default_markup(),
+        digits='Product Price', 
+        help="Pourcentage de marge appliqué au coût standard pour déterminer le prix de vente."
+    )
+    
+    @api.model
+    def _get_default_markup(self):
+        """ Récupère la marge globale définie dans res.config.settings """
+        return float(self.env['ir.config_parameter'].sudo().get_param('product.global_markup_percentage', default=15))
+    
+    @api.model
+    def update_product_prices(self):
+        """ Met à jour automatiquement le prix de vente si inférieur au prix calculé """
+        products = self.search([])
+        for product in products:
+            if product.markup_percentage:
+                min_price = product.standard_price * (1 + product.markup_percentage / 100)
+            else:
+                min_price = product.standard_price * 1.15  # Calcul du prix minimum
+            if product.list_price < min_price:
+                product.list_price = min_price  # Mise à jour du prix de vente
+                    
+    @api.onchange('markup_percentage')
+    def _onchange_markup_percentage(self):
+        """ Met à jour list_price si le taux de marge est modifié """
+        for product in self:
+            if product.standard_price > 0:
+                product.list_price = product.standard_price * (1 + product.markup_percentage / 100)
+                # min_price = product.standard_price * (1 + product.markup_percentage / 100)
+                # if product.list_price < min_price:
+                #     product.list_price = min_price
+        
+    @api.depends_context('company')
+    @api.depends('product_variant_ids', 'product_variant_ids.standard_price')
+    def _compute_standard_price(self):
+        """
+        Calcule le coût standard en fonction des variantes et met à jour le prix de vente.
+        NOTA : On ne dépend plus de markup_percentage pour éviter que la modification du taux
+        ne déclenche une réinitialisation du standard_price pour les templates à variantes multiples.
+        """
+        # Sélection des templates ayant une seule variante
+        unique_variants = self.filtered(lambda template: len(template.product_variant_ids) == 1)
+        for template in unique_variants:
+            template.standard_price = template.product_variant_ids.standard_price
+            template.list_price = template.standard_price * (1 + template.markup_percentage / 100)
+            # min_price = template.standard_price * (1 + template.markup_percentage / 100)
+            # if template.list_price < min_price:
+            #     template.list_price = min_price
+
+        # Pour les templates à plusieurs variantes, vous pouvez choisir la logique souhaitée.
+        # Ici, on ne souhaite pas écraser un éventuel standard_price existant lors de la modification du taux,
+        # donc on ne force pas la valeur à 0.
+        for template in (self - unique_variants):
+            # Si vous souhaitez conserver la valeur existante, commentez la ligne suivante.
+            # template.standard_price = 0.0
+            pass
+
+            
+    def _set_standard_price(self):
+        """Met à jour le coût des variantes et recalcule le prix de vente."""
+        for template in self:
+            if len(template.product_variant_ids) == 1:
+                template.product_variant_ids.standard_price = template.standard_price
+                # Mise à jour du prix de vente après modification du coût
+                min_price = template.standard_price * (1 + template.markup_percentage / 100)
+                if template.list_price < min_price:
+                    template.list_price = min_price
+
     @api.depends('image_1920', 'product_variant_ids.image_variant_1920', 'image_1', 'image_2', 'image_3', 'image_4')
     def _compute_image_count(self):
         for template in self:

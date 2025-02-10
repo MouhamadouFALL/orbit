@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <record id="assets_backend_inherit_ccbmshop_menu" model="ir.ui.view">
+        <field name="name">orbit.assets_backend</field>
+        <field name="inherit_id" ref="web.assets_backend"/>
+        <field name="arch" type="xml">
+            <xpath expr="//body" position="inside">
+                <link rel="stylesheet" type="text/css" href="/orbit/static/src/css/orbit.css"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

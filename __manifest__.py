@@ -13,7 +13,7 @@
     'version': '16.0.1.0',
 
     # any module necessary for this one to work correctly
-    'depends': ['base', 'product', 'sale', 'sale_crm','crm', 'account', 'purchase', 'stock', 'sale_stock'],
+    'depends': ['base', 'product', 'sale', 'sale_crm','crm', 'account', 'purchase', 'stock', 'sale_stock', 'web'],
 
     # always loaded
     'data': [
@@ -32,6 +32,7 @@
         'wizard/crm_type_sale_for_quotation_views.xml',
 
         # ***************************** Dossier views *******************
+        
         'views/comment_product.xml',
         'views/orbit_purchase_order.xml',
         'views/res_users_views.xml',
@@ -53,6 +54,12 @@
     'demo': [
         # 'demo/demo.xml',
     ],
+    
+    # 'assets': {
+    #     'web.assets_backend': [
+    #         'orbit/static/src/css/orbit.css',
+    #     ],
+    # },
     'license': 'LGPL-3',
     'application': True,
     'installable': True,
