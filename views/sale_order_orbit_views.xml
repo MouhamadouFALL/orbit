@@ -53,13 +53,13 @@
             <xpath expr="//button[@name='action_draft']" position="after">
                 <button name="send_resp_client" string="Envoyer RH client" type="object" 
                             class="oe_highlight" 
-                            attrs="{'invisible': [('state', 'not in',['draft', 'sent'])]}"
+                            attrs="{'invisible': [('state', 'not in',['draft', 'sent']), ('type_sale', '!=', 'creditorder')]}"
                             icon="fa-paper-plane"/>
 
-                <button name="validate_rh" string="RH Vadilider" type="object" 
+                <!-- <button name="validate_rh" string="RH Vadilider" type="object" 
                             class="oe_highlight" 
                             attrs="{'invisible': ['|', ('validation_rh_state', 'not in',['pending', 'rejected']), ('type_sale', '!=', 'creditorder'),]}"
-                            icon="fa-thumbs-up"/>
+                            icon="fa-thumbs-up"/> -->
                 <button name="approved_responsable" string="Approuver Commande" type="object" 
                             class="oe_highlight" 
                             attrs="{'invisible': ['|', ('validation_admin_state', 'not in',['pending', 'declined']), ('type_sale', '!=', 'creditorder'),]}"
