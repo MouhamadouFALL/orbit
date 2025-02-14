@@ -20,4 +20,4 @@ class CommentSimple(models.Model):
     author = fields.Char(string='Author')
     text = fields.Text(string='Text')
     date = fields.Datetime(string="Date d'envoie", default=fields.Datetime.now)
-    phone = fields.Char(string='Email')
+    phone = fields.Char(string='Phone')
