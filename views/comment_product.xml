@@ -53,7 +53,7 @@
             <tree string="Commentaires Simples produits">
                 <field name="author" />
                 <field name="text" />
-                <field name="email" />
+                <field name="phone" />
                 <field name="date" />
             </tree>
         </field>
@@ -70,7 +70,7 @@
                         <group>
                             <field name="author" />
                             <field name="text" />
-                            <field name="email" />
+                            <field name="phone" />
                             <field name="date" />
                         </group>
                     </group>
