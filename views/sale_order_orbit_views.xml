@@ -53,7 +53,7 @@
             <xpath expr="//button[@name='action_draft']" position="after">
                 <button name="send_resp_client" string="Envoyer RH client" type="object" 
                             class="oe_highlight" 
-                            attrs="{'invisible': [('state', 'not in',['draft', 'sent']), ('type_sale', '!=', 'creditorder')]}"
+                            attrs="{'invisible': ['|', ('state', 'not in',['draft', 'sent']), ('type_sale', '!=', 'creditorder')]}"
                             icon="fa-paper-plane"/>
 
                 <!-- <button name="validate_rh" string="RH Vadilider" type="object" 
