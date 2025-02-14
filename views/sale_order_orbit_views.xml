@@ -60,6 +60,7 @@
                             class="oe_highlight" 
                             attrs="{'invisible': ['|', ('validation_rh_state', 'not in',['pending', 'rejected']), ('type_sale', '!=', 'creditorder'),]}"
                             icon="fa-thumbs-up"/> -->
+                            
                 <button name="approved_responsable" string="Approuver Commande" type="object" 
                             class="oe_highlight" 
                             attrs="{'invisible': ['|', ('validation_admin_state', 'not in',['pending', 'declined']), ('type_sale', '!=', 'creditorder'),]}"
