@@ -25,6 +25,11 @@ class ProductTemplate(models.Model):
     creditorder_price = fields.Float('Prix commande à crédit', digits=(16, 2),
         help="Prix pour les commandes à crédit. Ce prix sera appliqué lorsqu'un produit est disponible pour une commande à crédit."
     )
+    
+    
+    # tag produit selon l'événement
+    # event_tag = fields.Many2one('product.event.tag', string="Tag événement")
+    
 
     # ------------------ Gestion des prix sur le produit ------------------
     # gestion des prix du produit en promotion

@@ -57,6 +57,11 @@
                 groups="orbit.stock_ccbmshop_group_user,orbit.sale_ccbmshop_group_user" 
                 sequence="4"
             />
+            <menuitem id="orbit_menu_products_tags" name="Produits Tags" 
+                action="product.product_tag_action" 
+                groups="orbit.stock_ccbmshop_group_user,orbit.sale_ccbmshop_group_user" 
+                sequence="5"
+            />
             <!-- <menuitem id="orbit_menu_stock" name="Stocks" action="orbit.action_product_stock_prorder_view" sequence="2"/> -->
         </menuitem>
 
