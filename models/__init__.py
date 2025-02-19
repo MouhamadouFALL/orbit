@@ -12,6 +12,7 @@ from . import sale_order
 from . import preorder_order
 from . import sale_order_line
 from . import product_product
+from . import product_category
 from . import purchase_order
 from . import web_comment_product
 
