@@ -53,11 +53,10 @@
                 sequence="3"
             />
             <menuitem id="orbit_menu_categories" name="Categories" 
-                action="orbit.product_category_action_form_inherit" 
+                action="product.product_category_action_form" 
                 groups="orbit.stock_ccbmshop_group_user,orbit.sale_ccbmshop_group_user" 
                 sequence="4"
             />
-            <!-- product.product_category_action_form -->
             <menuitem id="orbit_menu_products_tags" name="Produits Tags" 
                 action="product.product_tag_action" 
                 groups="orbit.stock_ccbmshop_group_user,orbit.sale_ccbmshop_group_user" 
