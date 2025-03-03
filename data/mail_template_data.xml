@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <!-- Mail template is done in a NOUPDATE block
+         so users can freely customize/delete them -->
+    <data noupdate="0">
+        <!-- Default Email template follow-up message (Send Email) -->
+        <record id="email_template_account_tracker_client" model="mail.template">
+            <field name="name">Email OrbitCity de relance client </field>
+            <field name="model_id" ref="orbit.model_account_tracker_line"/>
+            <field name="email_from">{{ (object.user_id.email or user.email_formatted) }}</field>
+            <field name="partner_to">{{ object.client.id }}</field>
+            <!-- <field name="email_to">${{ object.email|safe }}</field> -->
+            <field name="subject">{{ object.tracker_id.company_id.name }} Second Payment Reminder. Invoice Ref {{ object.sale_order_id.name or 'n/a' }}</field>
+            <field name="lang">${object.lang}</field>
+<!--            <field name="description">{{ object.description or 'n/a' }}</field>-->
+            <!-- <field name="auto_delete" eval="True"/> -->
+            <field name="body_html" type="html">
+                <p style="margin: 0px; padding: 0px; font-size: 13px;">
+                    Hi Dear Tester
+                </p>
+            </field>
+        </record>
+
+    </data>
+</odoo>

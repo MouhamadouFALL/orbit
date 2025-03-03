@@ -1,16 +1,52 @@
 
-/* Exemple : changer la couleur de fond du menu principal */
-.o_main_navbar {
+
+/* Changer la couleur de fond du header */
+.o_navbar {
     background-color: #005f8d !important; /* couleur de fond personnalisée */
 }
 
-/* Exemple : changer la couleur des liens dans le menu */
+/* Changer la couleur de fond du menu principal */
+.o_main_navbar {
+    background: linear-gradient(45deg, #005f8d, #005f8d);
+    background-color: #005f8d !important; /* couleur de fond personnalisée */
+}
+
+.navbar-light .navbar-nav .nav-link.dropdown-toggle {
+    color: #005f8d!important;  /* Remplacez par la couleur désirée */
+}
+
+
+/* Changer la couleur des liens dans le menu */
 .o_menu_sections a {
+    background-color: #007bb5 !important;
     color: #ffffff !important; /* couleur du texte en blanc */
 }
 
-/* Exemple : changer la couleur de survol des éléments du menu */
+/* Changer la couleur de survol des éléments du menu */
 .o_menu_sections a:hover {
     background-color: #007bb5 !important;
-    color: #ffffff !important;
+    color: #005f8d !important;
 }
+
+/* Exemple : modifier la couleur de fond des sous menus */
+.o_menu_sections .dropdown-menu {
+    background-color: #007bb5 !important; /* Remplace #f0f0f0 par la couleur désirée */
+}
+
+/* (Optionnel) Changer la couleur de fond au survol des éléments dans les sous menus */
+.o_menu_sections .dropdown-menu li a:hover {
+    background-color: #007bb5 !important; /* Remplace #cccccc par la couleur désirée */
+}
+
+
+.btn-primary {
+    background: #005f8d !important;   /* Remplacez par la couleur désirée */
+    color: #fff !important;  /* Changez la couleur du texte si nécessaire */
+}
+
+
+/* (Optionnel) Modifier d'autres éléments du menu si nécessaire */
+/* .o_menu_branding,
+.o_menu_systray {
+    background-color: #005f8d !important;
+} */
