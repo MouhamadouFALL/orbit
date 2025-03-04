@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
     <!--OrbitCity menu item -->
-    <menuitem id="orbit_menu_root" name="Orbit City" sequence="95">
+    <menuitem id="orbit_menu_root" name="CCBMSHOP" sequence="95">
 
         <!-- Menu CRM -->
         <menuitem id="orbit_menu_crm" name="CRM" sequence="5">
