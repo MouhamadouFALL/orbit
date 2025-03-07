@@ -80,7 +80,7 @@
         <field name="domain_force">[('restrict_user_ids', 'not in', user.id)]</field>
     </record>
 
-    <record id="sale_ccbmshop_group_user" model="res.groups">
+    <record id="purchase_ccbmshop_group_user" model="res.groups">
         <field name="name">Achats</field>
         <field name="category_id" ref="orbit_groups"/>
         <field name="comment">Groupe gestionnaire des achats</field>
