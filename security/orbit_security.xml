@@ -40,14 +40,14 @@
     </record>
 
     <record id="caisse_group_user" model="res.groups">
-        <field name="name">Caissie</field>
+        <field name="name">Caisse</field>
         <field name="category_id" ref="orbit_groups"/>
         <field name="comment">Gestionnaire de caisse</field>
         <field name="implied_ids" eval="[(4, ref('emp_group_user'))]"/>
     </record>
 
     <record id="sale_ccbmshop_group_user" model="res.groups">
-        <field name="name">Vendor</field>
+        <field name="name">Vendeur</field>
         <field name="category_id" ref="orbit_groups"/>
         <field name="comment">Groupe gestionnaire de ventes</field>
         <field name="implied_ids" eval="[(4, ref('emp_group_user'))]"/>
@@ -64,6 +64,13 @@
         <field name="name">stock</field>
         <field name="category_id" ref="orbit_groups"/>
         <field name="comment">Groupe Stock</field>
+        <field name="implied_ids" eval="[(4, ref('emp_group_user'))]"/>
+    </record>
+
+    <record id="shipping_ccbmshop_group_user" model="res.groups">
+        <field name="name">Livraison</field>
+        <field name="category_id" ref="orbit_groups"/>
+        <field name="comment">Groupe Livraison</field>
         <field name="implied_ids" eval="[(4, ref('emp_group_user'))]"/>
     </record>
 

@@ -39,7 +39,6 @@
         'views/ir_ui_menu_views.xml',
         'views/res_partner_views.xml',
         'views/affiliate_views.xml',
-        'views/product_category.xml',
         'views/product_product.xml',
         'views/sale_order_orbit_views.xml',
         'views/preorder_orbit_views.xml',
