@@ -73,10 +73,10 @@
         </menuitem>
 
         <!-- Menu Achats -->
-        <menuitem id="orbit_provisions_menu" name="Achats" sequence="12">
+        <menuitem id="orbit_provisions_menu" name="Achats" sequence="12" groups="orbit.purchase_ccbmshop_group_user">
             <menuitem id="orbit_purchase_order_menu"
                 name="Achats"
-                groups="orbit.purchase_ccbmshop_group_user"
+                
                 action="purchase.purchase_rfq"
                 sequence="3"/>
         </menuitem>
