@@ -66,10 +66,10 @@
         </menuitem>
 
         <!-- Menu Ventes -->
-        <menuitem id="orbit_menu_sale" name="Ventes" sequence="11">
+        <menuitem id="orbit_menu_sale" name="Ventes" sequence="11" groups="orbit.sale_ccbmshop_group_user">
             <menuitem id="orbit_order_menu" name="Commandes" action="orbit.orbit_sale_order" groups="orbit.sale_ccbmshop_group_user" sequence="1"/>
             <menuitem id="orbit_preorder_menu" name="Précommandes" action="orbit.orbit_preorder" groups="orbit.sale_ccbmshop_group_user" sequence="2"/>
-            <menuitem id="orbit_creditorder_menu" name="Commandes à crédit" action="orbit.orbit_creditorder" groups="orbit.sale_ccbmshop_group_user" sequence="3"/>
+            <menuitem id="orbit_creditorder_menu" name="Commandes à crédit" action="orbit.orbit_creditorder" groups="orbit.credit_group_user" sequence="3"/>
         </menuitem>
 
         <!-- Menu Achats -->
