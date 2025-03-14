@@ -37,7 +37,7 @@
 
             <xpath expr="//button[@name='%(sale.action_view_sale_advance_payment_inv)d'][1]" position="attributes">
                 <attribute name="string">Facturer</attribute>
-                <attribute name="attrs">{'invisible': ['|', ('type_sale', '!=', 'order'), ('state', 'not in', ['sale', 'to_delivered',])]}</attribute>
+                <attribute name="attrs">{'invisible': ['|', ('partial_delivery_done', '!=', True), '|', ('type_sale', '!=', 'order'), ('state', 'not in', ['sale', 'to_delivered',])]}</attribute>
             </xpath>
 
             <xpath expr="//button[@name='action_cancel']" position="attributes">

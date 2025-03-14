@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 from odoo import fields, models, api, _, tools, SUPERUSER_ID
+from odoo.exceptions import UserError, ValidationError
+from odoo.tools.float_utils import float_compare
 
 import logging
 
@@ -93,6 +95,12 @@ class SaleOrder(models.Model):
 
     usr_confirmed = fields.Many2one('res.users', string="Confirmé par", readonly=True)
     
+    partial_delivery_done = fields.Boolean(
+        string="Livraison partielle effectuée",
+        compute='_compute_partial_delivery',
+        store=True
+    )
+    
     
     @api.model_create_multi
     def create(self, vals_list):
@@ -110,4 +118,21 @@ class SaleOrder(models.Model):
                     'state': 'to_delivered'
                 })
 
+    def action_invoice_create(self):
+        for order in self:
+            if not order.partial_delivery_done:
+                raise UserError(_("Impossible de facturer avant livraison complète/partielle des produits !"))
+        return super().action_invoice_create()
+    
+    
+
+    @api.depends('order_line.qty_delivered')
+    def _compute_partial_delivery(self):
+        precision = self.env['decimal.precision'].precision_get('Product Unit of Measure')
+        for order in self:
+            order.partial_delivery_done = any(
+                float_compare(line.qty_delivered, 0.0, precision_digits=precision) > 0
+                for line in order.order_line
+                if line.product_id.type in ['consu', 'product']
+            )
                 
