@@ -130,7 +130,8 @@ class ProductTemplate(models.Model):
         unique_variants = self.filtered(lambda template: len(template.product_variant_ids) == 1)
         for template in unique_variants:
             template.standard_price = template.product_variant_ids.standard_price
-            template.list_price = template.standard_price * (1 + template.markup_percentage / 100)
+            if template.markup_percentage:
+                template.list_price = template.standard_price * (1 + template.markup_percentage / 100)
             # min_price = template.standard_price * (1 + template.markup_percentage / 100)
             # if template.list_price < min_price:
             #     template.list_price = min_price
