@@ -112,7 +112,8 @@ class ProductTemplate(models.Model):
         """ Met à jour list_price si le taux de marge est modifié """
         for product in self:
             if product.standard_price > 0:
-                product.list_price = product.standard_price * (1 + product.markup_percentage / 100)
+                if product.markup_percentage:
+                    product.list_price = product.standard_price * (1 + product.markup_percentage / 100)
                 # min_price = product.standard_price * (1 + product.markup_percentage / 100)
                 # if product.list_price < min_price:
                 #     product.list_price = min_price
