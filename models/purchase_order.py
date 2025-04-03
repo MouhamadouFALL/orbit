@@ -11,19 +11,25 @@ class PurchaseOrder(models.Model):
     usr_confirmed = fields.Many2one('res.users', string="Confirmé par", readonly=True)
 
     def write(self, vals):
-        # Autoriser spécifiquement l'annulation
-        if vals.get('state') == 'cancel':
-            return super().write(vals)
         
-        if not self.env.context.get('bypass_purchase_lock'):
-            for order in self.filtered(lambda o: o.state in ['purchase', 'done']):
-                if order.state in ['purchase', 'done']:
-                    # if not self.env.user.has_group('purchase.group_purchase_manager'):
-                    protected_fields = set(vals.keys()) - self._get_whitelisted_fields()
-                    if protected_fields:
-                        raise ValidationError(_("Opération bloquée ! La commande %s est confirmée (État: %s).") % (order.name, order.state))
+        # On vérifie que tous les bons sont en état modifiable (par exemple, "draft" ou "sent")
+        if any(order.state not in ('draft', 'sent') for order in self):
+            raise ValidationError("Vous ne pouvez plus modifier un bon d'achat confirmé.")
+        return super(PurchaseOrder, self).write(vals)
+    
+        # # Autoriser spécifiquement l'annulation
+        # if vals.get('state') == 'cancel':
+        #     return super().write(vals)
         
-        return super().write(vals)
+        # if not self.env.context.get('bypass_purchase_lock'):
+        #     for order in self:
+        #         if order.state in ['purchase', 'done']:
+        #             # if not self.env.user.has_group('purchase.group_purchase_manager'):
+        #             protected_fields = set(vals.keys()) - self._get_whitelisted_fields()
+        #             if protected_fields:
+        #                 raise ValidationError(_("Opération bloquée ! La commande %s est confirmée (État: %s).") % (order.name, order.state))
+        
+        # return super().write(vals)
 
     def _get_whitelisted_fields(self):
         """Champs modifiables après confirmation"""
@@ -36,8 +42,10 @@ class PurchaseOrder(models.Model):
 
     def button_confirm(self):
         """Overrides the confirm button method to record the user who confirmed."""
-        res = super(PurchaseOrder, self).button_confirm()
-        for order in self:
-            # Enregistre l'utilisateur connecté
-            order.usr_confirmed = self.env.user  
+        res = super().button_confirm()
+        self.sudo().write({
+            'state': 'purchase',
+            'usr_confirmed': self.env.user, # save l'utilisateur connecté
+            })
+         
         return res
