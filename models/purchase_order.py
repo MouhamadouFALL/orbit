@@ -1,5 +1,5 @@
 #-*- coding: utf-8 -*-
-from odoo import models, fields, api, _
+from odoo import models, fields, api, _, exceptions
 
 
 class PurchaseOrder(models.Model):
@@ -15,18 +15,15 @@ class PurchaseOrder(models.Model):
                 # if not self.env.user.has_group('purchase.group_purchase_manager'):
                 protected_fields = set(vals.keys()) - self._get_whitelisted_fields()
                 if protected_fields:
-                    raise exceptions.UserError(
-                        _("Opération bloquée ! La commande %s est confirmée (État: %s). Champs protégés: %s") %
-                        (order.name, order.state, ', '.join(protected_fields))
-                    )
+                    raise exceptions.UserError(_("Opération bloquée ! La commande %s est confirmée (État: %s).") % (order.name, order.state))
         return super().write(vals)
 
     def _get_whitelisted_fields(self):
         """Champs modifiables après confirmation"""
         return {
+            'notes',        # Notes internes
             # 'date_planned',  # Dates logistiques
             # 'incoterm_id',
-            'notes',        # Notes internes
             # 'priority'      # Priorité logistique
         }
 
