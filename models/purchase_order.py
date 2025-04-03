@@ -1,5 +1,6 @@
 #-*- coding: utf-8 -*-
 from odoo import models, fields, api, _, exceptions
+from odoo.exceptions import ValidationError, UserError
 
 
 class PurchaseOrder(models.Model):
@@ -15,7 +16,7 @@ class PurchaseOrder(models.Model):
                 # if not self.env.user.has_group('purchase.group_purchase_manager'):
                 protected_fields = set(vals.keys()) - self._get_whitelisted_fields()
                 if protected_fields:
-                    raise exceptions.UserError(_("Opération bloquée ! La commande %s est confirmée (État: %s).") % (order.name, order.state))
+                    raise ValidationError(_("Opération bloquée ! La commande %s est confirmée (État: %s).") % (order.name, order.state))
         return super().write(vals)
 
     def _get_whitelisted_fields(self):
