@@ -9,7 +9,9 @@ class PurchaseOrder(models.Model):
     attachment_ids = fields.Many2many('ir.attachment', 'orbit_attachment_rel', 'orbit_id', 'attachment_id', string="Pieces jointes", store=True, help="Attach files related to this order")
 
     usr_confirmed = fields.Many2one('res.users', string="Confirmé par", readonly=True)
+    
     is_locked = fields.Boolean(string="Verrouillé", compute="_compute_is_locked", store=True, help="Indique si le bon d'achat est verrouillé en lecture seule.")
+    
     @api.depends('state')
     def _compute_is_locked(self):
         for order in self:
@@ -17,8 +19,6 @@ class PurchaseOrder(models.Model):
                 order.is_locked = True
             else:
                 order.is_locked = False
-
-    
 
     def write(self, vals):
         # Autoriser spécifiquement l'annulation
