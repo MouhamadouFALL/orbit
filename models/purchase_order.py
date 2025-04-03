@@ -9,6 +9,27 @@ class PurchaseOrder(models.Model):
 
     usr_confirmed = fields.Many2one('res.users', string="Confirmé par", readonly=True)
 
+    def write(self, vals):
+        if not self.env.context.get('bypass_purchase_lock'):
+            for order in self.filtered(lambda o: o.state in ['purchase', 'done']):
+                # if not self.env.user.has_group('purchase.group_purchase_manager'):
+                protected_fields = set(vals.keys()) - self._get_whitelisted_fields()
+                if protected_fields:
+                    raise exceptions.UserError(
+                        _("Opération bloquée ! La commande %s est confirmée (État: %s). Champs protégés: %s") %
+                        (order.name, order.state, ', '.join(protected_fields))
+                    )
+        return super().write(vals)
+
+    def _get_whitelisted_fields(self):
+        """Champs modifiables après confirmation"""
+        return {
+            # 'date_planned',  # Dates logistiques
+            # 'incoterm_id',
+            'notes',        # Notes internes
+            # 'priority'      # Priorité logistique
+        }
+
     def button_confirm(self):
         """Overrides the confirm button method to record the user who confirmed."""
         res = super(PurchaseOrder, self).button_confirm()
