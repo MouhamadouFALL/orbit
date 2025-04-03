@@ -45,9 +45,10 @@ class PurchaseOrder(models.Model):
 
     def button_confirm(self):
         """Confirme le bon de commande et enregistre l'utilisateur qui confirme."""
+        self = self.with_context(bypass_purchase_lock=True)
         res = super().button_confirm()
         # Bypass la restriction lors de la confirmation grâce au contexte
-        self.with_context(bypass_purchase_lock=True).write({
+        self.write({
             'usr_confirmed': self.env.user.id,
         })
         
