@@ -37,6 +37,7 @@ class PurchaseOrder(models.Model):
         """Overrides the confirm button method to record the user who confirmed."""
         res = super().button_confirm()
         self.write({
+            'state': 'purchase',
             'usr_confirmed': self.env.user.id,
             })
         
