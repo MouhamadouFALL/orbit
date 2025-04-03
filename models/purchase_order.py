@@ -33,15 +33,15 @@ class PurchaseOrder(models.Model):
                     raise ValidationError(_("Opération bloquée ! La commande %s est confirmée (État: %s).") % (order.name, order.state))
         return super().write(vals)
 
-    # def _get_whitelisted_fields(self):
-    #     """Champs modifiables après confirmation"""
-    #     return {
-    #         'notes',    # Notes internes
-    #         'state',    # État de la commande
-    #         # 'date_planned',  # Dates logistiques
-    #         # 'incoterm_id',
-    #         # 'priority'      # Priorité logistique
-    #     }
+    def _get_whitelisted_fields(self):
+        """Champs modifiables après confirmation"""
+        return {
+            'notes',    # Notes internes
+            'state',    # État de la commande
+            # 'date_planned',  # Dates logistiques
+            # 'incoterm_id',
+            # 'priority'      # Priorité logistique
+        }
 
     def button_confirm(self):
         """Overrides the confirm button method to record the user who confirmed."""
