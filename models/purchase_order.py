@@ -17,10 +17,12 @@ class PurchaseOrder(models.Model):
         
         if not self.env.context.get('bypass_purchase_lock'):
             for order in self.filtered(lambda o: o.state in ['purchase', 'done']):
-                # if not self.env.user.has_group('purchase.group_purchase_manager'):
-                protected_fields = set(vals.keys()) - self._get_whitelisted_fields()
-                if protected_fields:
-                    raise ValidationError(_("Opération bloquée ! La commande %s est confirmée (État: %s).") % (order.name, order.state))
+                if order.state in ['purchase', 'done']:
+                    # if not self.env.user.has_group('purchase.group_purchase_manager'):
+                    protected_fields = set(vals.keys()) - self._get_whitelisted_fields()
+                    if protected_fields:
+                        raise ValidationError(_("Opération bloquée ! La commande %s est confirmée (État: %s).") % (order.name, order.state))
+        
         return super().write(vals)
 
     def _get_whitelisted_fields(self):
