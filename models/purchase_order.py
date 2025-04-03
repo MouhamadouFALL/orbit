@@ -11,6 +11,10 @@ class PurchaseOrder(models.Model):
     usr_confirmed = fields.Many2one('res.users', string="Confirmé par", readonly=True)
 
     def write(self, vals):
+        # Autoriser spécifiquement l'annulation
+        if vals.get('state') == 'cancel':
+            return super().write(vals)
+        
         if not self.env.context.get('bypass_purchase_lock'):
             for order in self.filtered(lambda o: o.state in ['purchase', 'done']):
                 # if not self.env.user.has_group('purchase.group_purchase_manager'):
