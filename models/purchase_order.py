@@ -10,7 +10,7 @@ class PurchaseOrder(models.Model):
 
     usr_confirmed = fields.Many2one('res.users', string="Confirmé par", readonly=True)
     
-    is_locked = fields.Boolean(string="Verrouillé", compute="_compute_is_locked", store=True, help="Indique si le bon d'achat est verrouillé en lecture seule.")
+    is_locked = fields.Boolean(string="Verrouillé", default=False, store=False, help="Indique si le bon d'achat est verrouillé en lecture seule.")
     
     @api.depends('state')
     def _compute_is_locked(self):
@@ -22,32 +22,33 @@ class PurchaseOrder(models.Model):
 
     def write(self, vals):
         # Autoriser spécifiquement l'annulation
-        if vals.get('state') == 'cancel':
+        if vals.get('state') in ['draft', 'to approve', 'sent', 'cancel']:
             return super().write(vals)
         
+        # Vérifier si la restriction doit être appliquée
         if not self.env.context.get('bypass_purchase_lock'):
             for order in self.filtered(lambda o: o.state in ['purchase', 'done']):
-                # if not self.env.user.has_group('purchase.group_purchase_manager'):
                 protected_fields = set(vals.keys()) - self._get_whitelisted_fields()
-                if protected_fields and order.is_locked:
-                    raise ValidationError(_("Opération bloquée ! La commande %s est confirmée (État: %s).") % (order.name, order.state))
+                if protected_fields:
+                    raise ValidationError(
+                        _("Opération bloquée ! La commande %s est confirmée (État: %s).") 
+                        % (order.name, order.state)
+                    )
         return super().write(vals)
 
     def _get_whitelisted_fields(self):
-        """Champs modifiables après confirmation"""
+        """Retourne la liste des champs modifiables après confirmation."""
         return {
             'notes',    # Notes internes
             'state',    # État de la commande
-            # 'date_planned',  # Dates logistiques
-            # 'incoterm_id',
-            # 'priority'      # Priorité logistique
         }
 
     def button_confirm(self):
-        """Overrides the confirm button method to record the user who confirmed."""
+        """Confirme le bon de commande et enregistre l'utilisateur qui confirme."""
         res = super().button_confirm()
-        self.write({
+        # Bypass la restriction lors de la confirmation grâce au contexte
+        self.with_context(bypass_purchase_lock=True).write({
             'usr_confirmed': self.env.user.id,
-            })
+        })
         
         return res
