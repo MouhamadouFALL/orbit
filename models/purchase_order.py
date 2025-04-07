@@ -1,9 +1,6 @@
 #-*- coding: utf-8 -*-
 from odoo import models, fields, api, _, exceptions
 from odoo.exceptions import ValidationError, UserError
-import logging
-
-_logger = logging.getLogger(__name__)
 
 
 class PurchaseOrder(models.Model):
@@ -30,7 +27,7 @@ class PurchaseOrder(models.Model):
             return super().write(vals)
         
         # Autoriser spécifiquement l'annulation
-        if self.state in ['draft', 'to approve', 'sent', 'cancel']:
+        if vals.get('state') in ['draft', 'to approve', 'sent', 'cancel']:
             return super().write(vals)
         
         # Vérifier si la restriction doit être appliquée
@@ -70,25 +67,18 @@ class PurchaseOrder(models.Model):
     
     def button_confirm(self):
         """Confirme le bon de commande et enregistre l'utilisateur qui confirme."""
-        
-        try:
-            return super(PurchaseOrder, self.with_context(
-                bypass_purchase_lock=True,
-                tracking_disable=True
-            )).button_confirm()
-        finally:
-            self.write({'usr_confirmed': self.env.user.id})
-            
-        # self = self.with_context(bypass_purchase_lock=True)
-        # res = super().button_confirm()
+        self = self.with_context(bypass_purchase_lock=True)
+        res = super().button_confirm()
         
         # Validation personnalisée avant confirmation
         # self._check_confirm_validation()
         
         # Mise à jour en masse pour optimiser les performances
-        # self.write({
-        #     'confirmed_by_user_id': self.env.user.id,
-        #     'date_approve': fields.Datetime.now()  # Optionnel : date de confirmation
-        # })
+        self.write({
+            'confirmed_by_user_id': self.env.user.id,
+            'date_approve': fields.Datetime.now()  # Optionnel : date de confirmation
+        })
         
-        # return res
+        return res
+    
+    
