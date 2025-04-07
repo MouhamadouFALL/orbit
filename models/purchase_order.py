@@ -30,7 +30,7 @@ class PurchaseOrder(models.Model):
             return super().write(vals)
         
         # Autoriser spécifiquement l'annulation
-        if vals.get('state') in ['draft', 'to approve', 'sent']:
+        if vals.get('state') in ['draft', 'to approve', 'sent', 'cancel']:
             return super().write(vals)
         
         # Vérifier si la restriction doit être appliquée
