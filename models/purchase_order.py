@@ -1,9 +1,6 @@
 #-*- coding: utf-8 -*-
 from odoo import models, fields, api, _, exceptions
 from odoo.exceptions import ValidationError, UserError
-import logging
-
-_logger = logging.getLogger(__name__)
 
 
 class PurchaseOrder(models.Model):
@@ -30,7 +27,7 @@ class PurchaseOrder(models.Model):
             return super().write(vals)
         
         # Autoriser spécifiquement l'annulation
-        if vals.get('state') in ['draft', 'to approve', 'sent', 'cancel']:
+        if self.state in ['draft', 'to approve', 'sent', 'cancel']:
             return super().write(vals)
         
         # Vérifier si la restriction doit être appliquée
@@ -43,6 +40,14 @@ class PurchaseOrder(models.Model):
                     raise UserError(_("Modification non autorisée sur le bon de commande %s confirmé ! (État: %s).") % (order.name, order.state))
         
         return super().write(vals)
+            
+        # # Vérifier si la restriction doit être appliquée
+        # if not self.env.context.get('bypass_purchase_lock'):
+        #     for order in self.filtered(lambda o: o.state in ['purchase', 'done']):
+        #         protected_fields = set(vals.keys()) - self._get_whitelisted_fields()
+        #         if protected_fields:
+        #             raise UserError(_("Vous ne pouvez plus modifier un bon d'achat confirmé"))
+
 
     def _get_whitelisted_fields(self):
         """Retourne la liste des champs modifiables après confirmation."""
@@ -59,7 +64,7 @@ class PurchaseOrder(models.Model):
             'write_uid',
             'write_date',
         }
-
+    
     def button_confirm(self):
         """Confirme le bon de commande et enregistre l'utilisateur qui confirme."""
         
@@ -70,3 +75,17 @@ class PurchaseOrder(models.Model):
             )).button_confirm()
         finally:
             self.write({'usr_confirmed': self.env.user.id})
+            
+        # self = self.with_context(bypass_purchase_lock=True)
+        # res = super().button_confirm()
+        
+        # Validation personnalisée avant confirmation
+        # self._check_confirm_validation()
+        
+        # Mise à jour en masse pour optimiser les performances
+        # self.write({
+        #     'confirmed_by_user_id': self.env.user.id,
+        #     'date_approve': fields.Datetime.now()  # Optionnel : date de confirmation
+        # })
+        
+        # return res
