@@ -1,6 +1,9 @@
 #-*- coding: utf-8 -*-
 from odoo import models, fields, api, _, exceptions
 from odoo.exceptions import ValidationError, UserError
+import logging
+
+_logger = logging.getLogger(__name__)
 
 
 class PurchaseOrder(models.Model):
@@ -75,7 +78,7 @@ class PurchaseOrder(models.Model):
         
         # Mise à jour en masse pour optimiser les performances
         self.write({
-            'confirmed_by_user_id': self.env.user.id,
+            'usr_confirmed': self.env.user.id,
             'date_approve': fields.Datetime.now()  # Optionnel : date de confirmation
         })
         
