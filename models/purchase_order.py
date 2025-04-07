@@ -13,7 +13,7 @@ class PurchaseOrder(models.Model):
 
     usr_confirmed = fields.Many2one('res.users', string="Confirmé par", readonly=True)
     
-    is_locked = fields.Boolean(string="Verrouillé", default=False, store=False, help="Indique si le bon d'achat est verrouillé en lecture seule.")
+    is_locked = fields.Boolean(string="Verrouillé", store=False, help="Indique si le bon d'achat est verrouillé en lecture seule.")
     
     @api.depends('state')
     def _compute_is_locked(self):
@@ -26,11 +26,11 @@ class PurchaseOrder(models.Model):
     def write(self, vals):
         # Autoriser les opérations système et pièces jointes
         system_context = self.env.context.get('tracking_disable') or self._context.get('bypass_purchase_lock')
-        if system_context or self.env.user.has_group('base.group_system'):
+        if system_context or self.env.user.has_group('base.ccbmshop_purchase_group_manager'):
             return super().write(vals)
         
         # Autoriser spécifiquement l'annulation
-        if vals.get('state') in ['draft', 'to approve', 'sent', 'cancel']:
+        if vals.get('state') in ['draft', 'to approve', 'sent']:
             return super().write(vals)
         
         # Vérifier si la restriction doit être appliquée
@@ -44,14 +44,6 @@ class PurchaseOrder(models.Model):
         
         return super().write(vals)
             
-        # # Vérifier si la restriction doit être appliquée
-        # if not self.env.context.get('bypass_purchase_lock'):
-        #     for order in self.filtered(lambda o: o.state in ['purchase', 'done']):
-        #         protected_fields = set(vals.keys()) - self._get_whitelisted_fields()
-        #         if protected_fields:
-        #             raise UserError(_("Vous ne pouvez plus modifier un bon d'achat confirmé"))
-
-
     def _get_whitelisted_fields(self):
         """Retourne la liste des champs modifiables après confirmation."""
         return {
@@ -70,11 +62,11 @@ class PurchaseOrder(models.Model):
     
     def button_confirm(self):
         """Confirme le bon de commande et enregistre l'utilisateur qui confirme."""
+        # Validation personnalisée avant confirmation
+        self._check_confirm_validation()
+        
         self = self.with_context(bypass_purchase_lock=True)
         res = super().button_confirm()
-        
-        # Validation personnalisée avant confirmation
-        # self._check_confirm_validation()
         
         # Mise à jour en masse pour optimiser les performances
         self.write({
@@ -84,4 +76,10 @@ class PurchaseOrder(models.Model):
         
         return res
     
-    
+    # Validation optionelle avant confirmation (à personnaliser)
+    def _check_confirm_validation(self):
+        """Add custom validation rules before confirmation"""
+        
+        # Vérification du groupe utilisateur
+        if not self.env.user.has_group('orbit.ccbmshop_purchase_group_manager'):
+            raise UserError(_("Permission refusée - Contactez un manager pour confirmer."))
