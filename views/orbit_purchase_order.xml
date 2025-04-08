@@ -23,8 +23,13 @@
                 </group>
             </xpath>
 
-            <!-- Les pages sur le bon de commande -->
+            <!-- Restriction de création et d'ouverture produit et fournisseur sur bon d'achat -->
+            <!-- Produit -->
             <xpath expr="//field[@name='product_id']" position="attributes">
+                <attribute name="options">{'no_create': True, 'no_open': True}</attribute>
+            </xpath>
+            <!-- Fournisseur -->
+            <xpath expr="//field[@name='partner_id']" position="attributes">
                 <attribute name="options">{'no_create': True, 'no_open': True}</attribute>
             </xpath>
 
