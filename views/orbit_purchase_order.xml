@@ -13,7 +13,7 @@
         <field name="inherit_id" ref="purchase.purchase_order_form"/>
         <field name="arch" type="xml">
             
-            <xpath expr="//sheet/group" position="after">options="{'no_create': True, 'no_open': True}"
+            <xpath expr="//sheet/group" position="after">
                 <group string="Documents joins">
                     <group >
                         <field name="attachment_ids" widget="many2many_binary" string="Attach a file" nolabel="1" colspan="2"/>
