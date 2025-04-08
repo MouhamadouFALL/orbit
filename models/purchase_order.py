@@ -74,6 +74,8 @@ class PurchaseOrder(models.Model):
             'date_approve': fields.Datetime.now()  # Optionnel : date de confirmation
         })
         
+        _logger.info(f"Bon de commande {self.name} confirmé par {self.env.user.name}")
+        
         return res
     
     # Validation optionelle avant confirmation (à personnaliser)
