@@ -78,6 +78,18 @@
                        decoration-muted="type_sale == 'creditorder'"
                 />
             </field>
+
+            <!-- Restriction de création et d'ouverture produit et client sur bon d'achat -->
+            <!-- Produit -->
+            <xpath expr="//field[@name='product_id']" position="attributes">
+                <!-- <attribute name="options">{'no_create': True, 'no_open': True}</attribute> -->
+                <attribute name="options">{'no_create': True}</attribute>
+            </xpath>
+            <!-- Client -->
+            <xpath expr="//field[@name='partner_id']" position="attributes">
+                <attribute name="options">{'no_create': True}</attribute>
+            </xpath>
+
             <field name="payment_term_id" position="attributes">
                 <attribute name="invisible">1</attribute>
             </field>
