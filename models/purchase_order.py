@@ -82,4 +82,5 @@ class PurchaseOrder(models.Model):
         
         # Vérification du groupe utilisateur
         if not self.env.user.has_group('orbit.ccbmshop_purchase_group_manager'):
-            raise UserError(_("Permission refusée - Contactez un manager pour confirmer."))
+            raise UserError(_("Permission refusée - user: %s - Contactez un manager pour confirmer.")%(self.env.user.name))
+        
