@@ -10,7 +10,7 @@
             <xpath expr="//page[@name='warehouse_config']" position="inside">
                 <group colspan="4">
                     <group string="Restricted Access">
-                        <field name="is_restricted" groups="base.admin_group_user"/>
+                        <field name="is_restricted" groups="orbit.admin_group_user"/>
                     </group>
                     <group></group>
                 </group>
