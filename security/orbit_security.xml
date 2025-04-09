@@ -100,7 +100,7 @@
         <field name="name">Accès restreint aux entrepôts pour Groupe Réservé</field>
         <field name="model_id" ref="stock.model_stock_warehouse"/>
         <field name="groups" eval="[(4, ref('orbit.ccbmshop_purchase_group_manager'))]"/>
-        <field name="domain_force">[('is_restricted', '=', True)]</field>
+        <field name="domain_force">[('is_restricted', '=', False)]</field>
     </record>
 
     <!-- <record id="user_own_signature_rule" model="ir.rule">
