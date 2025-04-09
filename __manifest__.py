@@ -13,7 +13,7 @@
     'version': '16.0.1.0',
 
     # any module necessary for this one to work correctly
-    'depends': ['base', 'product', 'sale', 'sale_crm','crm', 'account', 'purchase', 'stock', 'sale_stock', 'web', 'stock_warehouse'],
+    'depends': ['base', 'product', 'sale', 'sale_crm','crm', 'account', 'purchase', 'stock', 'sale_stock', 'web'],
 
     # always loaded
     'data': [
@@ -44,6 +44,7 @@
         'views/preorder_orbit_views.xml',
         'views/account_move_views.xml',
         'views/crm_lead_views.xml',
+        'views/stock_warehouse.xml',
         'report/orbit_purchase_order_template.xml',
         'report/orbit_sale_order_template.xml',
 
