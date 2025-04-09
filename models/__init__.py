@@ -15,5 +15,7 @@ from . import product_product
 from . import purchase_order
 from . import web_comment_product
 
+from . import stock_warehouse
+
 from . import account_move
 from . import account_payment

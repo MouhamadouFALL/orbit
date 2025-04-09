@@ -9,9 +9,7 @@
         <field name="arch" type="xml">
 
             <!-- ######################################### Header ######################################### -->
-            <field name="state" position="replace">
-                
-            </field>
+            <field name="state" position="replace" />
             <xpath expr="//header" position="after">
                 <header>
                     <field name="partial_delivery_done" invisible="1"/>
@@ -68,8 +66,6 @@
                             icon="fa-thumbs-up"/>
             </xpath>
 
-
-
             <!-- ######################################### Sheet ######################################### -->
             <field name="partner_id" position="before">
                 <field name="type_sale" string="Type de vente" widget="badge" attrs="{'invisible': [('type_sale', 'not in', ['order', 'preorder', 'creditorder'])]}"
@@ -87,7 +83,7 @@
             </xpath>
             <!-- Client -->
             <xpath expr="//field[@name='partner_id']" position="attributes">
-                <attribute name="options">{'no_create': True}</attribute>
+                <attribute name="options">{'no_create': True, 'always_reload': True}</attribute>
             </xpath>
 
             <field name="payment_term_id" position="attributes">
