@@ -99,7 +99,18 @@
     <record id="stock_warehouse_restricted_rule" model="ir.rule">
         <field name="name">Accès restreint aux entrepôts pour Groupe Réservé</field>
         <field name="model_id" ref="stock.model_stock_warehouse"/>
+        <!-- Règle appliquée pour le groupe Manager Achat -->
         <field name="groups" eval="[(4, ref('orbit.ccbmshop_purchase_group_manager'))]"/>
+        <!-- Domaine toujours vrai : permet d'accéder à tous les enregistrements -->
+        <field name="domain_force">[(1, '=', 1)]</field>
+    </record>
+
+    <record id="stock_warehouse_restricted_rule" model="ir.rule">
+        <field name="name">Accès restreint aux entrepôts pour utilisateurs non Manager Achat</field>
+        <field name="model_id" ref="stock.model_stock_warehouse"/>
+        <!-- Règle appliquée sur le groupe de base, auquel appartiennent la plupart des utilisateurs -->
+        <field name="groups" eval="[(4, ref('base.group_user'))]"/>
+        <!-- Les utilisateurs verront uniquement les entrepôts non restreints -->
         <field name="domain_force">[('is_restricted', '=', False)]</field>
     </record>
 
