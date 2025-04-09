@@ -96,8 +96,8 @@
 
 
     <!-- ### Access Rules -->
-    <record id="stock_warehouse_restricted_rule" model="ir.rule">
-        <field name="name">Accès restreint aux entrepôts pour Groupe Réservé</field>
+    <record id="stock_warehouse_restricted_full_access_rule" model="ir.rule">
+        <field name="name">Accès complet aux entrepôts pour Manager Achat</field>
         <field name="model_id" ref="stock.model_stock_warehouse"/>
         <!-- Règle appliquée pour le groupe Manager Achat -->
         <field name="groups" eval="[(4, ref('orbit.ccbmshop_purchase_group_manager'))]"/>
