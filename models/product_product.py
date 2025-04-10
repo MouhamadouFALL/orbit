@@ -15,17 +15,17 @@ class ProductTemplate(models.Model):
         ('partial', 'Paiement partiel')
     ], string="Option de paiement de précommande", default='full') # option de paiment accepté pour valider une précommande
 
-    # detailed_type = fields.Selection(selection_add=[
-    #     ('product', 'Storable Product')
-    # ], tracking=True, ondelete={'product': 'set consu'})
+    detailed_type = fields.Selection(selection_add=[
+        ('product', 'Storable Product')
+    ], tracking=True, default='product',ondelete={'product': 'set consu'})
     
-    detailed_type = fields.Selection([
-        # ('consu', 'Consumable'),
-        ('product', 'Storable Product'),
-        ('service', 'Service')], string='Product Type', default='consu', required=True, tracking=True,
-        help='A storable product is a product for which you manage stock. The Inventory app has to be installed.\n'
-             'A consumable product is a product for which stock is not managed.\n'
-             'A service is a non-material product you provide.')
+    # detailed_type = fields.Selection([
+    #     # ('consu', 'Consumable'),
+    #     ('product', 'Storable Product'),
+    #     ('service', 'Service')], string='Product Type', default='consu', required=True, tracking=True,
+    #     help='A storable product is a product for which you manage stock. The Inventory app has to be installed.\n'
+    #          'A consumable product is a product for which stock is not managed.\n'
+    #          'A service is a non-material product you provide.')
     
     # la précommande sera activée uniquement lorsque la quantité disponible du produit est inférieure à un seuil défini
     preorder_threshold = fields.Integer(string="Preorder threshold", default=5)
