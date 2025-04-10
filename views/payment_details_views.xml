@@ -6,7 +6,7 @@
         <field name="model">payment.details</field>
         <field name="arch" type="xml">
             <tree string="Détails de paiement">
-                <field name="name"/>
+                <field name="order_name"/>
                 <field name="amount"/>
                 <field name="order_id"/>
                 <field name="order_type"/>
@@ -24,9 +24,14 @@
             <form string="Détails de paiement">
                 <sheet>
                     <group>
-                        <field name="name"/>
-                        <field name="amount"/>
-                        <field name="payment_date"/>
+                        <group colspan="4">
+                            <field name="order_name"/>
+                            <field name="amount"/>
+                            <field name="order_id"/>
+                            <field name="order_type"/>
+                            <field name="payment_date"/>
+                            <field name="payment_method"/>
+                        </group>
                         <!-- Ajoutez d'autres champs selon vos besoins -->
                     </group>
                 </sheet>
