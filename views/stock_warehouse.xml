@@ -9,8 +9,8 @@
         <field name="arch" type="xml">
             <xpath expr="//page[@name='warehouse_config']" position="inside">
                 <group colspan="4">
-                    <group string="Restricted Access">
-                        <field name="is_restricted" groups="orbit.admin_group_user"/>
+                    <group string="Restreindre Accès" groups="orbit.admin_group_user">
+                        <field name="is_restricted" />
                     </group>
                     <group></group>
                 </group>
