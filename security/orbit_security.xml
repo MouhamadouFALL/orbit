@@ -25,6 +25,13 @@
         <field name="implied_ids" eval="[(4, ref('emp_group_user'))]"/>
     </record>
 
+    <record id="consul_group_user" model="res.groups">
+        <field name="name">Consultant</field>
+        <field name="category_id" ref="orbit_groups"/>
+        <field name="comment">Groupe des utilisateurs de consultations</field>
+        <field name="implied_ids" eval="[(4, ref('emp_group_user'))]"/>
+    </record>
+
     <record id="com_group_user" model="res.groups">
         <field name="name">Commerciaux</field>
         <field name="category_id" ref="orbit_groups"/>
