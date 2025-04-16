@@ -47,8 +47,9 @@
                 groups="orbit.stock_ccbmshop_group_user" 
                 sequence="2"
             />
+                <!-- action="sale.product_template_action"  -->
             <menuitem id="orbit_menu_products" name="Produits" 
-                action="sale.product_template_action" 
+                action="stock.product_template_action_product" 
                 groups="orbit.stock_ccbmshop_group_user,orbit.sale_ccbmshop_group_user" 
                 sequence="3"
             />
