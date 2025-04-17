@@ -43,7 +43,7 @@
         <field name="name">commande credit</field>
         <field name="category_id" ref="orbit_groups"/>
         <field name="comment">Responsable commande à crédit</field>
-        <field name="implied_ids" eval="[(4, ref('com_group_user'))]"/>
+        <field name="implied_ids" eval="[(4, ref('emp_group_user'))]"/>
     </record>
 
     <record id="caisse_group_user" model="res.groups">
