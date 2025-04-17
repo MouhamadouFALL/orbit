@@ -19,11 +19,11 @@ class ProductTemplate(models.Model):
     #     ('product', 'Storable Product')
     # ], tracking=True, default='product', ondelete={'product': 'set consu', })
     
-    detailed_type = fields.Selection([
+    detailed_type = fields.Selection(selection=[
         # ('consu', 'Consumable'),
         ('product', 'Storable Product'),
         ('service', 'Service')], string='Product Type', default='product', required=True, tracking=True,
-                                     ondelete={'consu': 'set product'},
+                                     ondelete={'product': 'set service'},
         help='A storable product is a product for which you manage stock. The Inventory app has to be installed.\n'
              'A consumable product is a product for which stock is not managed.\n'
              'A service is a non-material product you provide.')
