@@ -8,5 +8,5 @@ class StockMove(models.Model):
     product_id = fields.Many2one(
         'product.product', 'Product',
         check_company=True,
-        domain="[('type', 'in', ['product', 'consu']), '|', ('company_id', '=', False), ('company_id', '=', company_id)]", index=True, required=False,
+        domain="[('type', 'in', ['product', 'service']), '|', ('company_id', '=', False), ('company_id', '=', company_id)]", index=True, required=False,
         states={'done': [('readonly', True)]})
