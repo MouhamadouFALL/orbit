@@ -46,7 +46,7 @@
 
             <xpath expr="//button[@name='action_draft']" position="attributes">
                 <attribute name="string">Retourner en Devis</attribute>
-                <attribute name="attrs">{'invisible': [('state', 'in', ['draft', 'to_delivered'])]}</attribute>
+                <attribute name="attrs">{'invisible': [('state', 'in', ['draft', 'to_delivered', 'delivered'])]}</attribute>
             </xpath>
 
             <xpath expr="//button[@name='action_draft']" position="after">
