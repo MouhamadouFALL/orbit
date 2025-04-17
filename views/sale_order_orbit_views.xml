@@ -41,12 +41,12 @@
 
             <xpath expr="//button[@name='action_cancel']" position="attributes">
                 <attribute name="string">Annuler</attribute>
-                <attribute name="attrs">{'invisible': ['|', ('type_sale', 'not in', ['order', 'preorder', 'creditorder']), '|', ('state', 'not in', ['draft', 'sent', 'sale', 'validation', 'to_delivered', 'delivered']), ('id', '=', False)]}</attribute>
+                <attribute name="attrs">{'invisible': ['|', ('type_sale', 'not in', ['order', 'preorder', 'creditorder']), '|', ('state', 'not in', ['draft', 'sent', 'sale', 'validation', 'to_delivered']), ('id', '=', False)]}</attribute>
             </xpath>
 
             <xpath expr="//button[@name='action_draft']" position="attributes">
                 <attribute name="string">Retourner en Devis</attribute>
-                <attribute name="attrs">{'invisible': [('state', 'in', ['draft', 'to_delivered', 'delivered'])]}</attribute>
+                <attribute name="attrs">{'invisible': [('state', 'in', ['draft', 'to_delivered'])]}</attribute>
             </xpath>
 
             <xpath expr="//button[@name='action_draft']" position="after">
