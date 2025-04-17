@@ -48,14 +48,14 @@
                 </div>
 
             </xpath>
-            <!-- <xpath expr="//field[@name='detailed_type']" position="replace">
+            <xpath expr="//field[@name='detailed_type']" position="replace">
                 <field name="detailed_type" widget="selection">
                     <selection>
                         <option value="product">Storable Product</option>
                         <option value="service">Service</option>
                     </selection>
                 </field>
-            </xpath> -->
+            </xpath>
             <xpath expr="//page[@name='general_information']" position="after">
                 <page string="Précommande" invisible="1">
                     <group string="Preorder">

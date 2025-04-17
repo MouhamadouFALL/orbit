@@ -17,7 +17,7 @@ class ProductTemplate(models.Model):
 
     detailed_type = fields.Selection(selection_add=[
         ('product', 'Storable Product')
-    ], tracking=True, default='product', ondelete={'product': 'set consu', })
+    ], tracking=True, default='product', ondelete={'product': 'set service', })
     
     # detailed_type = fields.Selection(selection=[
     #     # ('consu', 'Consumable'),
