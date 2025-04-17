@@ -62,7 +62,7 @@
                             
                 <button name="approved_responsable" string="Approuver Commande" type="object" 
                             class="oe_highlight" 
-                            attrs="{'invisible': ['|', ('validation_admin_state', 'not in',['pending', 'declined']), ('type_sale', '!=', 'creditorder'),]}"
+                            attrs="{'invisible': ['|', ('validation_admin_state', 'not in',['pending', 'cancelled']), ('type_sale', '!=', 'creditorder'),]}"
                             icon="fa-thumbs-up"/>
             </xpath>
 

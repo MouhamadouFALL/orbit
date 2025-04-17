@@ -20,7 +20,7 @@
                 groups="orbit.sale_ccbmshop_group_user,orbit.com_group_user" 
                 sequence="10" />
             <menuitem id="menu_comments_simple" name="Commentaires Simples" 
-                action="action_comments_simple" 
+                action="action_comments_simple"
                 groups="orbit.sale_ccbmshop_group_user,orbit.com_group_user" 
                 sequence="20"/>
 
