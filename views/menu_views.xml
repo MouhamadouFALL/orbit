@@ -29,10 +29,10 @@
         <!-- Menu Operations -->
         <menuitem id="orbit_menu_ops" name="Operations" sequence="7">
             <menuitem id="orbit_journaux" name="Journaux" action="account.action_account_journal_form" groups="orbit.compta_ccbmshop_group_user" sequence="1"/>
-            <menuitem id="orbit_client_factures" name="Factures Client" action="account.action_move_out_invoice_type" groups="orbit.compta_ccbmshop_group_user" sequence="2"/>
-            <menuitem id="orbit_client_factures" name="Factures Fournisseur" action="account.action_move_in_invoice_type" groups="orbit.compta_ccbmshop_group_user" sequence="2"/>
+            <menuitem id="orbit_client_factures" name="Factures Clients" action="account.action_move_out_invoice_type" groups="orbit.compta_ccbmshop_group_user" sequence="2"/>
+            <menuitem id="orbit_fourniss_factures" name="Factures Fournisseurs" action="account.action_move_in_invoice_type" groups="orbit.compta_ccbmshop_group_user" sequence="2"/>
             <menuitem id="orbit_client_payments" name="Paiements client" action="account.action_account_payments" groups="orbit.caisse_group_user" sequence="3"/>
-            <menuitem id="orbit_client_payments" name="Paiements Fournisseur" action="account.action_account_payments_payable" groups="orbit.caisse_group_user" sequence="3"/>
+            <menuitem id="orbit_fourniss_payments" name="Paiements Fournisseurs" action="account.action_account_payments_payable" groups="orbit.caisse_group_user" sequence="3"/>
             <menuitem id="orbit_account_moves_all_menu" name="Ecritures Comptables" action="account.action_account_moves_all_a" groups="orbit.compta_ccbmshop_group_user" sequence="4"/>
         </menuitem>
 
