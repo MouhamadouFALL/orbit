@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 # Part of Odoo. See LICENSE file for full copyright and licensing details.
 from odoo import fields, models, api, _, exceptions
+from odoo.exceptions import UserError, ValidationError
 from odoo.tools import float_compare
 from datetime import date, datetime, timedelta
 from . import sale_order
@@ -192,27 +193,49 @@ class Preorder(models.Model):
             invoices = order.order_line.invoice_lines.move_id.filtered(lambda r: r.move_type in ('out_invoice', 'out_refund'))
             order.invoices = invoices
 
-    def action_view_payments(self):
-        payments = self.mapped("account_payment_ids")
-        action_ref = 'account.action_account_payments'
-        # action_ref = 'account.action_move_out_invoice_type'
-        action = self.env['ir.actions.act_window']._for_xml_id(action_ref)
-        action['domain'] = [('id', 'in', payments.ids), ('sale_id', '=', self.id)]
-        action['context'] = {
-            'default_partner_id': self.partner_id.id,
-            'default_sale_id': self.id,
-            'default_payment_type': 'inbound',
-            'default_ref': self.name,
-            'default_date': fields.Datetime.today(),
-            }
+    # def action_view_payments(self):
+    #     payments = self.mapped("account_payment_ids")
+    #     action_ref = 'account.action_account_payments'
+    #     # action_ref = 'account.action_move_out_invoice_type'
+    #     action = self.env['ir.actions.act_window']._for_xml_id(action_ref)
+    #     action['domain'] = [('id', 'in', payments.ids), ('sale_id', '=', self.id)]
+    #     action['context'] = {
+    #         'default_partner_id': self.partner_id.id,
+    #         'default_sale_id': self.id,
+    #         'default_payment_type': 'inbound',
+    #         'default_ref': self.name,
+    #         'default_date': fields.Datetime.today(),
+    #         }
         
-        if self.amount_payed < self.first_payment_amount:
-            action['context']['default_amount'] = self.first_payment_amount
-        elif self.amount_payed < (self.first_payment_amount + self.second_payment_amount):
-            action['context']['default_amount'] = self.second_payment_amount
-        else:
-            action['context']['default_amount'] = self.third_payment_amount
+    #     if self.amount_payed < self.first_payment_amount:
+    #         action['context']['default_amount'] = self.first_payment_amount
+    #     elif self.amount_payed < (self.first_payment_amount + self.second_payment_amount):
+    #         action['context']['default_amount'] = self.second_payment_amount
+    #     else:
+    #         action['context']['default_amount'] = self.third_payment_amount
 
+    #     return action
+    
+    def action_view_payments(self):
+        """Action pour visualiser les paiements liés"""
+              
+        if not self._get_valid_payments():
+            raise UserError(_("Aucun paiement trouvé pour cette commande"))
+
+        payments = self._get_valid_payments()
+        action = self.env['ir.actions.act_window']._for_xml_id('account.action_account_payments')
+        action.update({
+            'domain': [('id', 'in', payments.ids)],
+            'context': {
+                'default_partner_id': self.partner_id.id,
+                'default_ref': self.name,
+                'default_date': fields.Date.context_today(self),
+                'default_amount': self._get_next_payment_amount(),
+                'search_default_group_by_payment_type': True
+            },
+            'views': [(False, 'list'), (False, 'form')]
+        })
+        
         return action
 
     # ------------------------------------------ computes methods ----------------------
