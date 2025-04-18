@@ -23,19 +23,33 @@ class PurchaseOrder(models.Model):
         store=True,
         currency_field='currency_id')
     
+    def _get_valid_payments(self):
+        """Retourne les paiements fournisseurs postés réconciliés avec ce bon d'achat."""
+        self.ensure_one()
+        # On cherche soit sur les factures liées, soit sur la référence du PO
+        invoice_refs = self.invoice_ids.mapped('name')
+        domain = [
+            ('state', '=', 'posted'),
+            ('is_internal_transfer', '=', False),
+            '|',
+            ('invoice_ids', 'in', self.invoice_ids.ids),
+            ('ref', 'in', invoice_refs + [self.name]),
+        ]
+        return self.env['account.payment'].search(domain, order='date desc')
+    
     @api.depends('invoice_ids.state', 'invoice_ids.line_ids.matched_debit_ids.credit_move_id.payment_id.state')
     def _compute_payments(self):
         for order in self:
-            payments = self.env['account.payment']
+            payments = self._get_valid_payments()
             # On ne prend que les factures publiées ou payées
-            invoices = order.invoice_ids.filtered(lambda inv: inv.state in ('posted', 'paid'))
-            for inv in invoices:
-                # Récupère les paiements via la réconciliation des lignes de mouvement
-                pm = inv.line_ids \
-                        .mapped('matched_debit_ids') \
-                        .mapped('credit_move_id') \
-                        .mapped('payment_id')
-                payments |= pm
+            # invoices = order.invoice_ids.filtered(lambda inv: inv.state in ('posted', 'paid'))
+            # for inv in invoices:
+            #     # Récupère les paiements via la réconciliation des lignes de mouvement
+            #     pm = inv.line_ids \
+            #             .mapped('matched_debit_ids') \
+            #             .mapped('credit_move_id') \
+            #             .mapped('payment_id')
+            #     payments |= pm
             order.payment_count = len(payments)
             order.payment_total = sum(payments.mapped('amount'))
             
