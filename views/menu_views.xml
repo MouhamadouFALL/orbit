@@ -87,7 +87,7 @@
         <!-- Menu Programme Partenaire -->
         <menuitem id="orbit_affiliate_Partner" name="Partenaires" sequence="13">
             <menuitem id="orbit_person" name="Clients" action="orbit.orbit_partner_indiv" sequence="1"/>
-            <menuitem id="orbit_person" name="Fournisseurs" action="account.res_partner_action_supplier" sequence="1"/>
+            <menuitem id="orbit_fourniss" name="Fournisseurs" action="account.res_partner_action_supplier" sequence="1"/>
             <menuitem id="orbit_enterprise" name="Partenaires" action="orbit.orbit_partner_enterprise" sequence="2"/>
             <menuitem id="orbit_affiliate" name="Affiliations" action="orbit.orbit_affiliate_action" groups="orbit.affiliate_group_user" sequence="3"/>
         </menuitem>
