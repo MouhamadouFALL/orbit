@@ -250,6 +250,7 @@ class Preorder(models.Model):
             ('ref', 'ilike', self.mapped('name')), 
             # ('ref', 'in', self.mapped('name'))
         ]
+        
         payments = self.env['account.payment'].search(domain, order="date desc")
         
         return payments

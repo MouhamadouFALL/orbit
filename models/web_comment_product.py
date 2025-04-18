@@ -5,6 +5,8 @@ from odoo import models, fields
 class Comment(models.Model):
     _name = 'web.commentaire'
     _description = 'Commentaire sur un produit'
+    _is_readonly = True
+    
     
     author = fields.Char(string='Author')
     text = fields.Text(string='Text')
