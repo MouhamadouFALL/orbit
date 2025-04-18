@@ -237,6 +237,22 @@ class Preorder(models.Model):
         })
         
         return action
+    
+    def _get_valid_payments(self):
+        """ Retourne les paiements valides liés à la commande par les factures ou via la référence du bon de commande """
+        self.ensure_one()
+        invoice_names = self.invoice_ids.mapped('name')
+        domain = [
+            ('is_internal_transfer', '=', False), 
+            ('state', '=', 'posted'), 
+            '|', 
+            ('ref', 'in', invoice_names), 
+            ('ref', 'ilike', self.mapped('name')), 
+            # ('ref', 'in', self.mapped('name'))
+        ]
+        payments = self.env['account.payment'].search(domain, order="date desc")
+        
+        return payments
 
     # ------------------------------------------ computes methods ----------------------
     
