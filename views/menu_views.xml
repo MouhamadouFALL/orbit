@@ -30,7 +30,9 @@
         <menuitem id="orbit_menu_ops" name="Operations" sequence="7">
             <menuitem id="orbit_journaux" name="Journaux" action="account.action_account_journal_form" groups="orbit.compta_ccbmshop_group_user" sequence="1"/>
             <menuitem id="orbit_client_factures" name="Factures Client" action="account.action_move_out_invoice_type" groups="orbit.compta_ccbmshop_group_user" sequence="2"/>
+            <menuitem id="orbit_client_factures" name="Factures Fournisseur" action="account.action_move_in_invoice_type" groups="orbit.compta_ccbmshop_group_user" sequence="2"/>
             <menuitem id="orbit_client_payments" name="Paiements client" action="account.action_account_payments" groups="orbit.caisse_group_user" sequence="3"/>
+            <menuitem id="orbit_client_payments" name="Paiements Fournisseur" action="account.action_account_payments_payable" groups="orbit.caisse_group_user" sequence="3"/>
             <menuitem id="orbit_account_moves_all_menu" name="Ecritures Comptables" action="account.action_account_moves_all_a" groups="orbit.compta_ccbmshop_group_user" sequence="4"/>
         </menuitem>
 
@@ -85,6 +87,7 @@
         <!-- Menu Programme Partenaire -->
         <menuitem id="orbit_affiliate_Partner" name="Partenaires" sequence="13">
             <menuitem id="orbit_person" name="Clients" action="orbit.orbit_partner_indiv" sequence="1"/>
+            <menuitem id="orbit_person" name="Fournisseurs" action="account.res_partner_action_supplier" sequence="1"/>
             <menuitem id="orbit_enterprise" name="Partenaires" action="orbit.orbit_partner_enterprise" sequence="2"/>
             <menuitem id="orbit_affiliate" name="Affiliations" action="orbit.orbit_affiliate_action" groups="orbit.affiliate_group_user" sequence="3"/>
         </menuitem>
