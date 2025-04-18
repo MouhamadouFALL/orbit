@@ -517,7 +517,7 @@ class Preorder(models.Model):
 
             # Mise à jour des champs du bon de commande
             order.payment_line_ids = payment_lines
-            order.payment_count = len(payment_lines)
+            order.payment_count = len(order._get_valid_payments())
             order.amount_payed = order.amount_total - computed_amount_residual
             order.amount_residual = computed_amount_residual
             order.advance_payment_status = payment_state
