@@ -13,15 +13,50 @@ class PurchaseOrder(models.Model):
 
     usr_confirmed = fields.Many2one('res.users', string="Confirmé par", readonly=True)
     
-    is_locked = fields.Boolean(string="Verrouillé", store=False, help="Indique si le bon d'achat est verrouillé en lecture seule.")
+    payment_count = fields.Integer(
+        string='Nombre de paiements',
+        compute='_compute_payments',
+        store=True)
+    payment_total = fields.Monetary(
+        string='Total versé',
+        compute='_compute_payments',
+        store=True,
+        currency_field='currency_id')
     
-    @api.depends('state')
-    def _compute_is_locked(self):
+    @api.depends('invoice_ids.state', 'invoice_ids.line_ids.matched_debit_ids.credit_move_id.payment_id.state')
+    def _compute_payments(self):
         for order in self:
-            if order.state in ['purchase', 'done']:
-                order.is_locked = True
-            else:
-                order.is_locked = False
+            payments = self.env['account.payment']
+            # On ne prend que les factures publiées ou payées
+            invoices = order.invoice_ids.filtered(lambda inv: inv.state in ('posted', 'paid'))
+            for inv in invoices:
+                # Récupère les paiements via la réconciliation des lignes de mouvement
+                pm = inv.line_ids \
+                        .mapped('matched_debit_ids') \
+                        .mapped('credit_move_id') \
+                        .mapped('payment_id')
+                payments |= pm
+            order.payment_count = len(payments)
+            order.payment_total = sum(payments.mapped('amount'))
+            
+    def action_view_payments(self):
+        self.ensure_one()
+        # Recherche des paiements déjà identifiés
+        payments = self.env['account.payment'].search([
+            ('id', 'in', self.invoice_ids
+                            .mapped('line_ids')
+                            .mapped('matched_debit_ids')
+                            .mapped('credit_move_id')
+                            .mapped('payment_id')
+                            .ids)
+        ])
+        return {
+            'name': 'Paiements fournisseur',
+            'view_mode': 'tree,form',
+            'res_model': 'account.payment',
+            'domain': [('id', 'in', payments.ids)],
+            'type': 'ir.actions.act_window',
+        }
 
     def write(self, vals):
         # Autoriser les opérations système et pièces jointes
