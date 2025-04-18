@@ -253,6 +253,21 @@ class Preorder(models.Model):
         payments = self.env['account.payment'].search(domain, order="date desc")
         
         return payments
+    
+    def _get_next_payment_amount(self):
+        """Calcule dynamiquement le montant du prochain paiement attendu"""
+        payments = self._get_valid_payments()
+        paid = sum(payments.mapped('amount'))
+        thresholds = [
+            self.first_payment_amount,
+            self.first_payment_amount + self.second_payment_amount,
+            self.amount_total
+        ]
+        
+        for threshold in thresholds:
+            if paid < threshold:
+                return threshold - paid
+        return 0.0
 
     # ------------------------------------------ computes methods ----------------------
     
