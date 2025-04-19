@@ -37,15 +37,29 @@ class PurchaseOrder(models.Model):
         # ]
         # return self.env['account.payment'].search(domain, order='date desc')
         
+        # Initialisation d'un recordset vide
         payments = self.env['account.payment']
 
-        for invoice in self.invoice_ids.filtered(lambda inv: inv.state == 'posted' and inv.is_invoice()):
-            for line in invoice.line_ids.filtered(lambda l: l.account_id.internal_type in ('payable', 'receivable')):
-                matched_lines = line.matched_debit_ids + line.matched_credit_ids
-                payments |= matched_lines.mapped('payment_id')
+        # Si pas de facture lié, on retourne vide immédiatement
+        if not self.invoice_ids:
+            return payments
 
-        # return payments.filtered(lambda p: p.state == 'posted' and not p.is_internal_transfer)
-        return payments.filtered(lambda p: p.state == 'posted')
+        # On ne traite que les factures fournisseur publiées
+        invoices = self.invoice_ids.filtered(lambda inv: inv.state == 'posted' and inv.is_invoice())
+        for inv in invoices:
+            # Pour chaque ligne comptable de la facture,
+            # on ne garde que celles liées aux comptes payable/receivable
+            lines = inv.line_ids.filtered(
+                lambda l: l.account_id.user_type_id.type in ('payable', 'receivable')
+            )
+            # On récupère les paiements via les écritures réconciliées
+            for line in lines:
+                reconciled = line.matched_debit_ids | line.matched_credit_ids
+                payments |= reconciled.mapped('payment_id')
+
+        # Ne renvoyer que les paiements effectivement postés et non-internes
+        return payments.filtered(lambda p: p.state == 'posted' and not p.is_internal_transfer)
+
     
     @api.depends('invoice_ids.state', 'invoice_ids.line_ids.matched_debit_ids.credit_move_id.payment_id.state')
     def _compute_payments(self):
