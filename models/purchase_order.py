@@ -37,6 +37,7 @@ class PurchaseOrder(models.Model):
         # ]
         # return self.env['account.payment'].search(domain, order='date desc')
         
+        payments = self.env['account.payment']  # Recordset vide initial
         # On ne traite que les factures fournisseur publiées
         for inv in self.invoice_ids.filtered(lambda i: i.state == 'posted' and i.is_invoice()):
             # Pour chaque ligne de la facture, on parcourt les réconciliations
