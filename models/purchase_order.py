@@ -27,8 +27,18 @@ class PurchaseOrder(models.Model):
         """Retourne les paiements fournisseurs postés réconciliés avec ce bon d'achat."""
         self.ensure_one()
         # On cherche soit sur les factures liées, soit sur la référence du PO
-        # 
+        # invoice_refs = self.invoice_ids.mapped('name')
+        # domain = [
+        #     ('state', '=', 'posted'),
+        #     ('is_internal_transfer', '=', False),
+        #     '|',
+        #     ('invoice_ids', 'in', self.invoice_ids.ids),
+        #     ('ref', 'in', invoice_refs + [self.name]),
+        # ]
+        # return self.env['account.payment'].search(domain, order='date desc')
         
+        payments = self.env['account.payment']
+
         for invoice in self.invoice_ids.filtered(lambda inv: inv.state == 'posted' and inv.is_invoice()):
             for line in invoice.line_ids.filtered(lambda l: l.account_id.internal_type in ('payable', 'receivable')):
                 matched_lines = line.matched_debit_ids + line.matched_credit_ids
@@ -53,8 +63,8 @@ class PurchaseOrder(models.Model):
             order.payment_total = sum(payments.mapped('amount'))
             
     def action_view_payments(self):
-        # self.ensure_one()
-        # # Recherche des paiements déjà identifiés
+        self.ensure_one()
+        # Recherche des paiements déjà identifiés
         # payments = self.env['account.payment'].search([
         #     ('id', 'in', self.invoice_ids
         #                     .mapped('line_ids')
@@ -71,7 +81,6 @@ class PurchaseOrder(models.Model):
         #     'type': 'ir.actions.act_window',
         # }
         
-        self.ensure_one()
         payments = self._get_valid_payments()
         if not payments:
             raise UserError(_("Aucun paiement trouvé pour ce bon d'achat"))
