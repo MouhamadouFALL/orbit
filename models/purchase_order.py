@@ -37,29 +37,19 @@ class PurchaseOrder(models.Model):
         # ]
         # return self.env['account.payment'].search(domain, order='date desc')
         
-        # Initialisation d'un recordset vide
-        payments = self.env['account.payment']
-
-        # Si pas de facture lié, on retourne vide immédiatement
-        if not self.invoice_ids:
-            return payments
-
         # On ne traite que les factures fournisseur publiées
-        invoices = self.invoice_ids.filtered(lambda inv: inv.state == 'posted' and inv.is_invoice())
-        for inv in invoices:
-            # Pour chaque ligne comptable de la facture,
-            # on ne garde que celles liées aux comptes payable/receivable
-            lines = inv.line_ids.filtered(
-                lambda l: l.account_id.user_type_id.type in ('payable', 'receivable')
-            )
-            # On récupère les paiements via les écritures réconciliées
-            for line in lines:
-                reconciled = line.matched_debit_ids | line.matched_credit_ids
-                payments |= reconciled.mapped('payment_id')
+        for inv in self.invoice_ids.filtered(lambda i: i.state == 'posted' and i.is_invoice()):
+            # Pour chaque ligne de la facture, on parcourt les réconciliations
+            for line in inv.line_ids:
+                recs = line.matched_debit_ids | line.matched_credit_ids
+                for rec in recs:
+                    # Chaque reconciliation référence deux lignes : debit_move_id et credit_move_id
+                    for move_line in (rec.debit_move_id, rec.credit_move_id):
+                        if move_line.payment_id:
+                            payments |= move_line.payment_id
 
-        # Ne renvoyer que les paiements effectivement postés et non-internes
+        # Ne garder que les paiements effectivement postés et non‐internes
         return payments.filtered(lambda p: p.state == 'posted' and not p.is_internal_transfer)
-
     
     @api.depends('invoice_ids.state', 'invoice_ids.line_ids.matched_debit_ids.credit_move_id.payment_id.state')
     def _compute_payments(self):
