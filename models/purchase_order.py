@@ -44,7 +44,8 @@ class PurchaseOrder(models.Model):
                 matched_lines = line.matched_debit_ids + line.matched_credit_ids
                 payments |= matched_lines.mapped('payment_id')
 
-        return payments.filtered(lambda p: p.state == 'posted' and not p.is_internal_transfer)
+        # return payments.filtered(lambda p: p.state == 'posted' and not p.is_internal_transfer)
+        return payments.filtered(lambda p: p.state == 'posted')
     
     @api.depends('invoice_ids.state', 'invoice_ids.line_ids.matched_debit_ids.credit_move_id.payment_id.state')
     def _compute_payments(self):
