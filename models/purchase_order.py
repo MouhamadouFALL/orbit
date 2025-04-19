@@ -27,15 +27,14 @@ class PurchaseOrder(models.Model):
         """Retourne les paiements fournisseurs postés réconciliés avec ce bon d'achat."""
         self.ensure_one()
         # On cherche soit sur les factures liées, soit sur la référence du PO
-        invoice_refs = self.invoice_ids.mapped('name')
-        domain = [
-            ('state', '=', 'posted'),
-            ('is_internal_transfer', '=', False),
-            '|',
-            ('invoice_ids', 'in', self.invoice_ids.ids),
-            ('ref', 'in', invoice_refs + [self.name]),
-        ]
-        return self.env['account.payment'].search(domain, order='date desc')
+        # 
+        
+        for invoice in self.invoice_ids.filtered(lambda inv: inv.state == 'posted' and inv.is_invoice()):
+            for line in invoice.line_ids.filtered(lambda l: l.account_id.internal_type in ('payable', 'receivable')):
+                matched_lines = line.matched_debit_ids + line.matched_credit_ids
+                payments |= matched_lines.mapped('payment_id')
+
+        return payments.filtered(lambda p: p.state == 'posted' and not p.is_internal_transfer)
     
     @api.depends('invoice_ids.state', 'invoice_ids.line_ids.matched_debit_ids.credit_move_id.payment_id.state')
     def _compute_payments(self):
@@ -54,23 +53,41 @@ class PurchaseOrder(models.Model):
             order.payment_total = sum(payments.mapped('amount'))
             
     def action_view_payments(self):
+        # self.ensure_one()
+        # # Recherche des paiements déjà identifiés
+        # payments = self.env['account.payment'].search([
+        #     ('id', 'in', self.invoice_ids
+        #                     .mapped('line_ids')
+        #                     .mapped('matched_debit_ids')
+        #                     .mapped('credit_move_id')
+        #                     .mapped('payment_id')
+        #                     .ids)
+        # ])
+        # return {
+        #     'name': 'Paiements fournisseur',
+        #     'view_mode': 'tree,form',
+        #     'res_model': 'account.payment',
+        #     'domain': [('id', 'in', payments.ids)],
+        #     'type': 'ir.actions.act_window',
+        # }
+        
         self.ensure_one()
-        # Recherche des paiements déjà identifiés
-        payments = self.env['account.payment'].search([
-            ('id', 'in', self.invoice_ids
-                            .mapped('line_ids')
-                            .mapped('matched_debit_ids')
-                            .mapped('credit_move_id')
-                            .mapped('payment_id')
-                            .ids)
-        ])
-        return {
-            'name': 'Paiements fournisseur',
-            'view_mode': 'tree,form',
-            'res_model': 'account.payment',
+        payments = self._get_valid_payments()
+        if not payments:
+            raise UserError(_("Aucun paiement trouvé pour ce bon d'achat"))
+
+        action = self.env.ref('account.action_account_payments').read()[0]
+        action.update({
             'domain': [('id', 'in', payments.ids)],
-            'type': 'ir.actions.act_window',
-        }
+            'context': {
+                'default_partner_id': self.partner_id.id,
+                'default_ref': self.name,
+                'default_date': fields.Date.context_today(self),
+                'search_default_group_by_payment_type': True,
+            },
+            'views': [(False, 'tree'), (False, 'form')],
+        })
+        return action
 
     def write(self, vals):
         # Autoriser les opérations système et pièces jointes
