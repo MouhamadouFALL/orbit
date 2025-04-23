@@ -10,7 +10,7 @@ class SaleOrderLine(models.Model):
         comodel_name='product.product',
         string="Product",
         change_default=True, ondelete='set null', check_company=True, index='btree_not_null',
-        domain="[('sale_ok', '=', True), '|', ('company_id', '=', False), ('company_id', '=', company_id)]")
+        domain="[('product_tmpl_id.type','in', ['product', 'service']), ('sale_ok', '=', True), '|', ('company_id', '=', False), ('company_id', '=', company_id)]")
     
     state = fields.Selection(
         related='order_id.state',
