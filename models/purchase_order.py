@@ -171,6 +171,6 @@ class PurchaseOrder(models.Model):
 class PurchaseOrderLine(models.Model):
     _inherit = 'purchase.order.line'
     
-    product_id = fields.Many2one('product.product', string='Product', domain=[('purchase_ok', '=', True), ('type', '!=', 'consu')], change_default=True, index='btree_not_null')
+    product_id = fields.Many2one('product.product', string='Product', domain=[('purchase_ok', '=', True), ('detailed_type', '!=', 'consu')], change_default=True, index='btree_not_null')
     
         
