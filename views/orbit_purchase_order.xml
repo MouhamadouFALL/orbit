@@ -40,6 +40,10 @@
                 <attribute name="options">{'no_create': True}</attribute>
             </xpath>
 
+            <field name="product_id" position="attributes">
+                <attribute name="domain">[('product_tmpl_id.type','in', ['product', 'service'])]</attribute>
+            </field>
+
         </field>
     </record>
 
