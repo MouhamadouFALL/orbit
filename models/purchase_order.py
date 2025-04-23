@@ -171,6 +171,12 @@ class PurchaseOrder(models.Model):
 class PurchaseOrderLine(models.Model):
     _inherit = 'purchase.order.line'
     
-    product_id = fields.Many2one('product.product', string='Product', domain=[('purchase_ok', '=', True), ('detailed_type', 'not in', ['consu'])], change_default=True, index='btree_not_null')
+    # product_id = fields.Many2one('product.product', string='Product', domain=[('purchase_ok', '=', True), ('detailed_type', 'not in', ['consu'])], change_default=True, index='btree_not_null')
     
+    api.onchange('order_id')
+    def _onchange_order_id_filter_consumable(self):
+        # Définition du domaine pour n'autoriser que les consommables
+        domain = [('product_tmpl_id.type', 'in', ['service', 'product'])]
+        return {'domain': {'product_id': domain}}
+
         
