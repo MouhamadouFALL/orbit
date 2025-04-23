@@ -57,11 +57,6 @@
                     <!-- <attribute name="options">{'no_create': True}</attribute> -->
                     <attribute name="options">{'no_create': True, 'no_open': True}</attribute>
                 </field>
-                <field name="product_template_id" position="attributes">
-                    <attribute name="domain">[('product_tmpl_id.type','in', ['product', 'service'])]</attribute>
-                    <!-- <attribute name="options">{'no_create': True}</attribute> -->
-                    <attribute name="options">{'no_create': True, 'no_open': True}</attribute>
-                </field>
 
                 <!-- Restriction de création et d'ouverture produit et client sur bon d'achat -->
                 <!-- Produit -->
