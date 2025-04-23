@@ -167,3 +167,10 @@ class PurchaseOrder(models.Model):
         if not self.env.user.has_group('orbit.ccbmshop_purchase_group_manager'):
             raise UserError(_("Permission refusée - user: %s - Contactez un manager pour confirmer.")%(self.env.user.name))
         
+        
+class PurchaseOrderLine(models.Model):
+    _inherit = 'purchase.order.line'
+    
+    product_id = fields.Many2one('product.product', string='Product', domain=[('purchase_ok', '=', True), ('type', '!=', 'consu')], change_default=True, index='btree_not_null')
+    
+        
