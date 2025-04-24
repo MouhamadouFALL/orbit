@@ -58,8 +58,9 @@
     <field name="model">stock.picking</field>
     <field name="inherit_id" ref="stock.view_picking_form"/>
         <field name="arch" type="xml">
+            <!-- Correction du XPath avec 'attributes' et syntaxe valide -->
             <xpath expr="//field[@name='move_ids_without_package']" position="attributes">
-                <attribute name="options">{'no_create': True}</attribute>
+                <attribute name="options">{'create': False}</attribute>
             </xpath>
         </field>
     </record>
