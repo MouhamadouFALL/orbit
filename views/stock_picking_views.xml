@@ -60,8 +60,7 @@
         <field name="arch" type="xml">
 
             <xpath expr="//sheet/notebook/page/field[@name='move_ids_without_package']" position="attibutes">
-                <attribute name="groups">orbit.stock_ccbmshop_group_user</attribute>
-                <attribute name="create">0</attribute>
+                <attribute name="options">{'create': False}</attribute>
             </xpath>
 
         </field>
