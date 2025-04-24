@@ -57,11 +57,17 @@
         # 'demo/demo.xml',
     ],
     
-    # 'assets': {
-    #     'web.assets_backend': [
-    #         'orbit/static/src/css/orbit.css',
-    #     ],
-    # },
+    'assets': {
+        # pour le back-office
+        'web.assets_backend': [
+            'orbit/static/src/js/custom_script.js',
+        ],
+        
+        # pour le site web (frontend)
+        # 'web.assets_frontend': [
+        #     'your_module/static/src/js/my_script.js',
+        # ],
+    },
     'license': 'LGPL-3',
     'application': True,
     'installable': True,
