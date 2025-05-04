@@ -26,14 +26,17 @@ class PurchaseOrder(models.Model):
     
     # Ajout de l'état de validation dans le modèle de bon de commande
     # 'to_validate' est un état personnalisé pour la validation
-    state = fields.Selection(
-        selection_add=[('to_validate', 'Validation')],
-        string='Status',
-        readonly=True,
-        index=True,
-        copy=False,
-        tracking=True,
-    )
+    # state = fields.Selection(selection_add=[('to_validate', 'Validation')],
+    #     string='Status', readonly=True, index=True, copy=False, tracking=True,)
+    state = fields.Selection([
+        ('draft', 'RFQ'),
+        ('sent', 'RFQ Sent'),
+        ('to_validate', 'Validation')
+        ('to approve', 'To Approve'),
+        ('purchase', 'Purchase Order'),
+        ('done', 'Locked'),
+        ('cancel', 'Cancelled')
+    ], string='Status', readonly=True, index=True, copy=False, default='draft', tracking=True)
     
     # last_reminder_date = fields.Datetime(string="Dernier rappel envoyé")
     
