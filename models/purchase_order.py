@@ -52,6 +52,7 @@ class PurchaseOrder(models.Model):
         for order in self:
             template.send_mail(order.id, force_send=True, raise_exception=True, email_values=email_values)
             _logger.info(f"Demande de validation envoyée pour le bon de commande {order.name}")
+            _logger.info(f"+++++++++++++++++++++ >>>>>>>>>>>>>>>>>>>>>>> lien contenu: {self.env['ir.config_parameter'].sudo().get_param('web.base.url')}")
             
     # Cette méthode est appelée pour envoyer un email de validation
     # aux utilisateurs du groupe 'orbit.ccbmshop_purchase_group_manager'
