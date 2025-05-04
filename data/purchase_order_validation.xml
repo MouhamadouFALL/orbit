@@ -24,7 +24,7 @@
                             Bonjour <strong>Bara</strong>,<br/><br/>
                             <p>Merci de valider le bon de commande <strong><span t-esc="object.name"/></strong> en suivant le lien :</p>
                             <p>
-                                <a t-att-href="env['ir.config_parameter'].sudo().get_param('web.base.url') + '/web#id=' + str(object.id) + '&view_type=form&model=purchase.order'">
+                                <a t-att-href="env['ir.config_parameter'].sudo().get_param('web.base.url') + '/web#id=' + str(object.id) + '&amp;view_type=form&amp;model=purchase.order'">
 
                                     Valider <span t-esc="object.name"/>
                                 </a>
