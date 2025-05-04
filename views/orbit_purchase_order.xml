@@ -13,6 +13,9 @@
         <field name="inherit_id" ref="purchase.purchase_order_form"/>
         <field name="arch" type="xml">
 
+            <field name="state" position="replace">
+                <field name="state" widget="statusbar" statusbar_visible="draft,sent,to_validate,purchase" readonly="1"/>
+            </field>
             <field name="state" position="before">
                 <button name="action_to_validation" 
                         string="Soumettre à validation"
