@@ -79,11 +79,14 @@ class PurchaseOrder(models.Model):
         email_recipients = set()
         
         group = self.env.ref('orbit.ccbmshop_purchase_group_manager')
-        usr_ids = self.env['res.users'].search([('groups_id', 'in', [group.id])])
-        email_recipients.update([usr.email for usr in usr_ids if usr.email])
+        # usr_ids = self.env['res.users'].search([('groups_id', 'in', [group.id])])
+        # email_recipients.update([usr.email for usr in usr_ids if usr.email])
+        
+        email_recipients = self.env['res.users'].search([('groups_id', 'in', [group.id]), ('email', '!=', False)]).mapped('email')
             
         email_values = {
                 'email_to': ','.join(email_recipients),
+                'email_from': self.env.user.email or 'ccbmshop@ccbmtechnologies.com',
             }
         
         return email_values
