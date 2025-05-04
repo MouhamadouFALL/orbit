@@ -1,6 +1,7 @@
 #-*- coding: utf-8 -*-
 from odoo import models, fields, api, _, exceptions
 from odoo.exceptions import ValidationError, UserError
+from datetime import datetime, timedelta
 import logging
 
 _logger = logging.getLogger(__name__)
@@ -22,6 +23,68 @@ class PurchaseOrder(models.Model):
         compute='_compute_payments',
         store=True,
         currency_field='currency_id')
+    
+    # Ajout de l'état de validation dans le modèle de bon de commande
+    # 'to_validate' est un état personnalisé pour la validation
+    state = fields.Selection(
+        selection_add=[('to_validate', 'Validation')],
+        string='Status',
+        readonly=True,
+        index=True,
+        copy=False,
+        tracking=True,
+    )
+    
+    # last_reminder_date = fields.Datetime(string="Dernier rappel envoyé")
+    
+    # Gestion de demande de validation du bon de commande 
+    # Cette méthode est appelée pour envoyer un email de validation
+    # aux utilisateurs du groupe 'orbit.ccbmshop_purchase_group_manager'
+    # et changer l'état du bon de commande à 'to_validate'
+    def action_to_validation(self):
+        self.write({'state': 'to_validate'})
+        template = self.env.ref('orbit.email_template_purchase_order_validation')
+        email_values = self.get_mails_usrs_from_group_usrs()
+        for order in self:
+            template.send_mail(order.id, force_send=True, raise_exception=True, email_values=email_values)
+            _logger.info(f"Demande de validation envoyée pour le bon de commande {order.name}")
+            
+    # Cette méthode est appelée pour envoyer un email de validation
+    # aux utilisateurs du groupe 'orbit.ccbmshop_purchase_group_manager'
+    @api.model
+    def send_validation_reminders(self):
+        """Envoie des rappels de validation pour tous les bons d'achat en attente de validation."""
+        
+        template = self.env.ref('orbit.email_template_purchase_order_validation', raise_if_not_found=False)
+        if not template:
+            return
+        
+        # threshold_time = datetime.now() - timedelta(minutes=2)
+        purchase_orders = self.search([('state', '=', 'to_validate')])
+        email_values = self.get_mails_usrs_from_group_usrs()
+        for order in purchase_orders:
+            # if not order.last_reminder_date or order.last_reminder_date < threshold_time:
+            template.send_mail(order.id, force_send=True, raise_exception=True, email_values=email_values)
+            _logger.info(f"Rappel de validation envoyé pour le bon de commande {order.name}")
+            # order.last_reminder_date = fields.Datetime.now()
+    
+    # cette méthode est appelée pour renvoyer la liste des emails des utilisateurs du groupe Manager d'achat
+    # et les ajouter dans un set pour éviter les doublons
+    # elle est utilisée dans la méthode action_to_validation et send_validation_reminders
+    def get_mails_usrs_from_group_usrs(self):
+
+        email_recipients = set()
+        
+        group = self.env.ref('orbit.ccbmshop_purchase_group_manager')
+        usr_ids = self.env['res.users'].search([('groups_id', 'in', [group.id])])
+        email_recipients.update([usr.email for usr in usr_ids if usr.email])
+            
+        email_values = {
+                'email_to': ','.join(email_recipients),
+            }
+        
+        return email_values
+            
     
     def _get_valid_payments(self):
         """Retourne les paiements fournisseurs postés réconciliés avec ce bon d'achat."""
