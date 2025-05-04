@@ -48,6 +48,7 @@ class PurchaseOrder(models.Model):
         self.write({'state': 'to_validate'})
         template = self.env.ref('orbit.email_template_purchase_order_validation')
         email_values = self.get_mails_usrs_from_group_usrs()
+        _logger.info(f"+++++++++++++++++ Afficher Email from et Email to ::::>  {email_values}")
         for order in self:
             template.send_mail(order.id, force_send=True, raise_exception=True, email_values=email_values)
             _logger.info(f"Demande de validation envoyée pour le bon de commande {order.name}")
