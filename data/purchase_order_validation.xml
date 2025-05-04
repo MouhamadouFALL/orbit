@@ -6,7 +6,8 @@
         <field name="model_id" ref="orbit.model_purchase_order"/>
         <field name="subject">Validation requise pour le Bon d'achat {{object.name}}</field>
         <!-- <field name="email_from">${object.user_id.email}</field> -->
-        <field name="email_from">{{object.company_id.email or 'ccbmshop.orbitcity@ccbm.sn'}}</field>
+        <!-- <field name="email_from">{{object.company_id.email or 'ccbmshop.orbitcity@ccbm.sn'}}</field> -->
+        <field name="email_from"></field>
         <!-- <field name="email_to">{{object.user_id.email}}</field> -->
         <field name="email_to"></field>
         <!-- <field name="email_cc">{{object.user_id.email}}</field> -->
