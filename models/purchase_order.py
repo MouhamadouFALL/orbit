@@ -223,7 +223,7 @@ class PurchaseOrder(models.Model):
         #self._check_confirm_validation()
         if not self.user_has_groups('orbit.ccbmshop_purchase_group_manager'):
             # Si non autorisé, on envoie un message d'erreur
-            raise UserError(_("User: %s - Vous n'avez pas les droits nécessaires pour confirmer un bon de commande - Contactez un manager pour confirmer.")%(self.env.user.name))
+            raise UserError(_("%s - Vous n'avez pas les droits nécessaires pour confirmer un bon de commande - Contactez un manager pour confirmer.")%(self.env.user.name))
         
         self = self.with_context(bypass_purchase_lock=True)
         res = super().button_confirm()

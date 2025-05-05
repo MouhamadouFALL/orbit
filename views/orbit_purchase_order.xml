@@ -14,8 +14,11 @@
         <field name="arch" type="xml">
 
             <xpath expr="//header/button[@name='button_draft']" position="replace">
-                <button name="button_confirm" type="object" states="sent,to_validate" string="Confirmer la commande" context="{'validate_analytic': True}" class="oe_highlight" id="bid_confirm" data-hotkey="v"/>
                 <button name="button_draft" states="cancel,to_validate" string="Marquer comme Brouillon" type="object" data-hotkey="o"/>
+            </xpath>
+            <xpath expr="//header/button[@name='button_confirm'][2]" position="replace">
+                <!-- <button name="button_confirm" type="object" states="draft" string="Confirmer la commande" context="{'validate_analytic': True}" class="oe_highlight" id="bid_confirm" data-hotkey="v"/> -->
+                <button name="button_confirm" type="object" states="to_validate" context="{'validate_analytic': True}" string="Confirmer la commande" id="draft_confirm"/>
             </xpath>
 
             <field name="state" position="replace">
@@ -26,7 +29,7 @@
                         string="Soumettre à validation"
                         type="object"
                         states="draft,sent"
-                        class="oe_stat_button" 
+                        class="oe_highlight" 
                         icon="fa-file-text"
                         groups="orbit.ccbmshop_purchase_group_manager"
                 />
