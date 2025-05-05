@@ -45,8 +45,6 @@ class PurchaseOrder(models.Model):
     def button_confirm(self):
         """Confirme le bon de commande et enregistre l'utilisateur qui confirme."""
         
-        res = super().button_confirm()
-        
         if not self.user_has_groups('orbit.ccbmshop_purchase_group_manager'):
             # Si non autorisé, on envoie un message d'erreur
             raise UserError(_("Vous n'avez pas les droits nécessaires pour confirmer ce bon de commande."))
@@ -74,7 +72,7 @@ class PurchaseOrder(models.Model):
             if order.partner_id not in order.message_partner_ids:
                 order.message_subscribe([order.partner_id.id])
                 
-        return res
+        return super().button_confirm()
 
             
     
