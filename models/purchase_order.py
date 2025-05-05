@@ -45,6 +45,7 @@ class PurchaseOrder(models.Model):
     # aux utilisateurs du groupe 'orbit.ccbmshop_purchase_group_manager'
     # et changer l'état du bon de commande à 'to_validate'
     def action_to_validation(self):
+        _logger.info(f"+++++++++++++++++++++ >>>>>>>>>>>>>>>>>>>>>>> lien contenu: {self.env['ir.config_parameter'].sudo().get_param('web.base.url')}")
         self.write({'state': 'to_validate'})
         template = self.env.ref('orbit.email_template_purchase_order_validation')
         email_values = self.get_mails_usrs_from_group_usrs()
