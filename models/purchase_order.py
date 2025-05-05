@@ -42,40 +42,6 @@ class PurchaseOrder(models.Model):
     
     # last_reminder_date = fields.Datetime(string="Dernier rappel envoyé")
     
-    def button_confirm(self):
-        """Confirme le bon de commande et enregistre l'utilisateur qui confirme."""
-        
-        if not self.user_has_groups('orbit.ccbmshop_purchase_group_manager'):
-            # Si non autorisé, on envoie un message d'erreur
-            raise UserError(_("Vous n'avez pas les droits nécessaires pour confirmer ce bon de commande."))
-        
-        # # Validation personnalisée avant confirmation
-        for order in self:
-            if order.state not in ['draft', 'sent', 'to_validate']:
-                continue
-            
-            # Validation effective si utilisateur autorisé
-            # if validation_group and self.env.user in validation_group.users:
-            
-            order.order_line._validate_analytic_distribution()
-            order._add_supplier_to_product()
-            # Deal with double validation process
-            if order._approval_allowed():
-                order.button_approve()
-                # Enregistrement de l'utilisateur qui a confirmé le bon de commande
-                order.write({'usr_confirmed': self.env.user.id,})
-                _logger.info(f" +++ [{fields.Datetime.now()}] +++ Bon de commande {self.name} confirmé par {self.env.user.name}")
-            else:
-                order.write({'state': 'to approve'})
-            
-            # Abonnement automatique au partenaire
-            if order.partner_id not in order.message_partner_ids:
-                order.message_subscribe([order.partner_id.id])
-                
-        return super().button_confirm()
-
-            
-    
     # Gestion de demande de validation du bon de commande 
     # Cette méthode est appelée pour envoyer un email de validation
     # aux utilisateurs du groupe 'orbit.ccbmshop_purchase_group_manager'
@@ -252,21 +218,40 @@ class PurchaseOrder(models.Model):
     
     def button_confirm(self):
         """Confirme le bon de commande et enregistre l'utilisateur qui confirme."""
+        
         # Validation personnalisée avant confirmation
-        self._check_confirm_validation()
+        #self._check_confirm_validation()
+        if not self.user_has_groups('orbit.ccbmshop_purchase_group_manager'):
+            # Si non autorisé, on envoie un message d'erreur
+            raise UserError(_("User: %s - Vous n'avez pas les droits nécessaires pour confirmer un bon de commande - Contactez un manager pour confirmer.")%(self.env.user.name))
         
         self = self.with_context(bypass_purchase_lock=True)
         res = super().button_confirm()
         
-        # Mise à jour en masse pour optimiser les performances
-        self.write({
-            'usr_confirmed': self.env.user.id,
-            'date_approve': fields.Datetime.now()  # Optionnel : date de confirmation
-        })
-        
-        _logger.info(f" [{fields.Datetime.now()}] +++ Bon de commande {self.name} confirmé par {self.env.user.name}")
-        
+        for order in self:
+            if order.state not in ['draft', 'sent', 'to_validate']:
+                continue
+            
+            # Validation effective si utilisateur autorisé
+            # if validation_group and self.env.user in validation_group.users:
+            
+            order.order_line._validate_analytic_distribution()
+            order._add_supplier_to_product()
+            # Deal with double validation process
+            if order._approval_allowed():
+                order.button_approve()
+                # Enregistrement de l'utilisateur qui a confirmé le bon de commande
+                order.write({'usr_confirmed': self.env.user.id,})
+                _logger.info(f" +++ [{fields.Datetime.now()}] +++ Bon de commande {self.name} confirmé par {self.env.user.name}")
+            else:
+                order.write({'state': 'to approve'})
+            
+            # Abonnement automatique au partenaire
+            if order.partner_id not in order.message_partner_ids:
+                order.message_subscribe([order.partner_id.id])
+             
         return res
+
     
     # Validation optionelle avant confirmation (à personnaliser)
     def _check_confirm_validation(self):
