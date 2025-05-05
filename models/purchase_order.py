@@ -11,7 +11,9 @@ class PurchaseOrder(models.Model):
     _inherit = "purchase.order"
 
     attachment_ids = fields.Many2many('ir.attachment', 'orbit_attachment_rel', 'orbit_id', 'attachment_id', string="Pieces jointes", store=True, help="Attach files related to this order")
-
+    # Ajout de champs pour la gestion de la validation
+    # 'usr_confirmed' est l'utilisateur qui a confirmé le bon de commande
+    # 'date_approve' est la date de confirmation
     usr_confirmed = fields.Many2one('res.users', string="Confirmé par", readonly=True)
     
     payment_count = fields.Integer(
@@ -39,6 +41,38 @@ class PurchaseOrder(models.Model):
     ], string='Status', readonly=True, index=True, copy=False, default='draft', tracking=True)
     
     # last_reminder_date = fields.Datetime(string="Dernier rappel envoyé")
+    
+    def button_confirm(self):
+        
+        """Confirme le bon de commande et enregistre l'utilisateur qui confirme."""
+        # # Validation personnalisée avant confirmation
+        for order in self:
+            if order.state not in ['draft', 'sent', 'to_validate']:
+                continue
+            
+            # Validation effective si utilisateur autorisé
+            # if validation_group and self.env.user in validation_group.users:
+            if self.user_has_groups('orbit.ccbmshop_purchase_group_manager'):
+                order.order_line._validate_analytic_distribution()
+                order._add_supplier_to_product()
+                # Deal with double validation process
+                if order._approval_allowed():
+                    order.button_approve()
+                    # Enregistrement de l'utilisateur qui a confirmé le bon de commande
+                    order.write({'usr_confirmed': self.env.user.id,})
+                    _logger.info(f" +++ [{fields.Datetime.now()}] +++ Bon de commande {self.name} confirmé par {self.env.user.name}")
+                else:
+                    order.write({'state': 'to approve'})
+                
+                # Abonnement automatique au partenaire
+                if order.partner_id not in order.message_partner_ids:
+                    order.message_subscribe([order.partner_id.id])
+                    
+            # Si non autorisé, on envoie un message d'erreur
+            else:
+                raise UserError(_("Vous n'avez pas les droits nécessaires pour confirmer ce bon de commande."))
+            
+        return True
     
     # Gestion de demande de validation du bon de commande 
     # Cette méthode est appelée pour envoyer un email de validation
