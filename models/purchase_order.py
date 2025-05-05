@@ -49,7 +49,7 @@ class PurchaseOrder(models.Model):
     def action_to_validation(self):
         _logger.info(f"+++++++++++++++++++++ >>>>>>>>>>>>>>>>>>>>>>> lien contenu: {self.env['ir.config_parameter'].sudo().get_param('web.base.url')}")
         self.write({'state': 'to_validate'})
-        template = self.env.ref('orbit.email_template_purchase_order_validation')
+        template = self.env.ref('orbit.email_template_purchase_order_validation', raise_if_not_found=True)
         email_values = self.get_mails_usrs_from_group_usrs()
         _logger.info(f"+++++++++++++++++ Afficher Email from et Email to ::::>  {email_values}")
         for order in self:
@@ -63,7 +63,7 @@ class PurchaseOrder(models.Model):
     def send_validation_reminders(self):
         """Envoie des rappels de validation pour tous les bons d'achat en attente de validation."""
         
-        template = self.env.ref('orbit.email_template_purchase_order_validation', raise_if_not_found=False)
+        template = self.env.ref('orbit.email_template_purchase_order_validation', raise_if_not_found=True)
         if not template:
             return
         
@@ -73,7 +73,7 @@ class PurchaseOrder(models.Model):
         for order in purchase_orders:
             # if not order.last_reminder_date or order.last_reminder_date < threshold_time:
             template.send_mail(order.id, force_send=True, raise_exception=True, email_values=email_values)
-            _logger.info(f"Rappel de validation envoyé pour le bon de commande {order.name}")
+            _logger.info(f"++++++++++++++++++++++++ :::::::::::::: >>>>>>>>>>>>>>>>>>> Rappel de validation envoyé pour le bon de commande {order.name}")
             # order.last_reminder_date = fields.Datetime.now()
     
     # cette méthode est appelée pour renvoyer la liste des emails des utilisateurs du groupe Manager d'achat

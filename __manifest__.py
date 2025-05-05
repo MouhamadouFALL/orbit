@@ -23,7 +23,7 @@
         
         # ***************************** actions planifier ****************
         'data/purchase_order_validation.xml',
-        # 'data/cron_validation_purchase_order.xml',
+        'data/cron_validation_purchase_order.xml',
         'data/cron_update_image_count.xml',
         'data/cron_tag_order_overdue.xml',
         # 'data/cron_sale_order.xml',
