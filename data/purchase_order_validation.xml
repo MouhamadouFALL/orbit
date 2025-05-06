@@ -23,7 +23,7 @@
                         <p style="font-size: 13px;">
                             <!-- Bonjour <strong>Bara</strong> <strong><t t-esc="object.partner_id.name"/></strong>,<br/><br/> -->
                             Bonjour <strong>Bara</strong>,<br/><br/>
-                            <p>Merci de valider le bon de commande <strong><span t-esc="object.name"/></strong> en cliquant sur le bouton ci-dessous.</p>
+                            <p><span t-esc="user.name"/> demande de valider ce Bon de commande <strong><span t-esc="object.name"/></strong> en cliquant sur le bouton ci-dessous.</p>
                             <p>
                                 <a t-att-href="env['ir.config_parameter'].sudo().get_param('web.base.urls') + '/web#id=' + str(object.id) + '&amp;view_type=form&amp;model=purchase.order'" 
                                     style="background-color: #17a2b8; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px; display: inline-block;">
