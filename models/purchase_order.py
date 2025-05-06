@@ -47,15 +47,23 @@ class PurchaseOrder(models.Model):
     # aux utilisateurs du groupe 'orbit.ccbmshop_purchase_group_manager'
     # et changer l'état du bon de commande à 'to_validate'
     def action_to_validation(self):
-        _logger.info(f"+++++++++++++++++++++ >>>>>>>>>>>>>>>>>>>>>>> lien contenu: {self.env['ir.config_parameter'].sudo().get_param('web.base.url')}")
-        self.write({'state': 'to_validate'})
+        """Envoie une demande de validation pour le bon de commande sélectionné."""
+        
+        _logger.info(f" ++++++++++++++++ >>>>>>>>>>>>>>>>>>>>>>>>>> :::>>> {self.env['ir.config_parameter'].sudo().get_param('web.base.urls')}")
+        # Selectionner les bon de commandes à valider
+        orders = self.write({'state': 'to_validate'})
+        if not orders:
+            raise UserError(_("Aucun bon de commande sélectionné pour la validation."))
+        # recuperer le modèle d'email de validation
         template = self.env.ref('orbit.email_template_purchase_order_validation', raise_if_not_found=True)
+        # recupérer le dictionnaire des emails 
         email_values = self.get_mails_usrs_from_group_usrs()
-        _logger.info(f"+++++++++++++++++ Afficher Email from et Email to ::::>  {email_values}")
-        for order in self:
+        
+        for order in orders:
             template.send_mail(order.id, force_send=True, raise_exception=True, email_values=email_values)
             _logger.info(f"Demande de validation envoyée pour le bon de commande {order.name}")
-            _logger.info(f"+++++++++++++++++++++ >>>>>>>>>>>>>>>>>>>>>>> lien contenu: {self.env['ir.config_parameter'].sudo().get_param('web.base.url')}")
+            _logger.info(f" ++++++++++++++++ >>>>>>>>>>>>>>>>>>>>>>>>>> :::>>> {self.env['ir.config_parameter'].sudo().get_param('web.base.urls')}")
+            
             
     # Cette méthode est appelée pour envoyer un email de validation
     # aux utilisateurs du groupe 'orbit.ccbmshop_purchase_group_manager'
