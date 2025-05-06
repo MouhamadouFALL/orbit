@@ -31,7 +31,7 @@
                         states="draft,sent"
                         class="oe_highlight" 
                         icon="fa-file-text"
-                        groups="orbit.ccbmshop_purchase_group_manager"
+                        data-hotkey="v"
                 />
             </field>
 
