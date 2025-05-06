@@ -50,16 +50,15 @@ class PurchaseOrder(models.Model):
         """Envoie une demande de validation pour le bon de commande sélectionné."""
         
         _logger.info(f" ++++++++++++++++ >>>>>>>>>>>>>>>>>>>>>>>>>> :::>>> {self.env['ir.config_parameter'].sudo().get_param('web.base.urls')}")
-        # Selectionner les bon de commandes à valider
-        orders = self.write({'state': 'to_validate'})
-        if not orders:
-            raise UserError(_("Aucun bon de commande sélectionné pour la validation."))
+        
+        self.write({'state': 'to_validate'})
         # recuperer le modèle d'email de validation
         template = self.env.ref('orbit.email_template_purchase_order_validation', raise_if_not_found=True)
         # recupérer le dictionnaire des emails 
         email_values = self.get_mails_usrs_from_group_usrs()
         
-        for order in orders:
+        for order in self:
+            # Envoi de l'email de validation
             template.send_mail(order.id, force_send=True, raise_exception=True, email_values=email_values)
             _logger.info(f"Demande de validation envoyée pour le bon de commande {order.name}")
             _logger.info(f" ++++++++++++++++ >>>>>>>>>>>>>>>>>>>>>>>>>> :::>>> {self.env['ir.config_parameter'].sudo().get_param('web.base.urls')}")
