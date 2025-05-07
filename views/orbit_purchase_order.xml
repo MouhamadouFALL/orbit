@@ -18,7 +18,7 @@
             </xpath>
             <xpath expr="//header/button[@name='button_confirm'][2]" position="replace">
                 <!-- <button name="button_confirm" type="object" states="draft" string="Confirmer la commande" context="{'validate_analytic': True}" class="oe_highlight" id="bid_confirm" data-hotkey="v"/> -->
-                <button name="button_confirm" type="object" states="to_validate" context="{'validate_analytic': True}" string="Confirmer la commande" id="draft_confirm"/>
+                <button name="button_confirm" type="object" groups="orbit.ccbmshop_purchase_group_manager" states="to_validate" context="{'validate_analytic': True}" string="Confirmer la commande" id="draft_confirm"/>
             </xpath>
 
             <field name="state" position="replace">
