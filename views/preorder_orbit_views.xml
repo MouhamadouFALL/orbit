@@ -65,9 +65,9 @@
                     <!-- <attribute name="options">{'no_create': True}</attribute> -->
                 </xpath>
                 <!-- Client -->
-                <xpath expr="//field[@name='partner_id']" position="attributes">
+                <!-- <xpath expr="//field[@name='partner_id']" position="attributes">
                     <attribute name="options">{'no_create': True}</attribute>
-                </xpath>
+                </xpath> -->
                 
                 <xpath expr="//notebook" position="inside">
                     <page string="Paiement d'avance"
