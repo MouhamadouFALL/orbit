@@ -99,7 +99,7 @@ class PurchaseOrder(models.Model):
         email_values = {
                 'email_to': ','.join(email_recipients),
                 # 'email_from': self.env.user.email or 'ccbmshop@ccbmtechnologies.com',
-                'email_from': 'ccbmshop@ccbmtechnologies.com',
+                'email_from': 'shop@ccbm.sn',
             }
         
         return email_values

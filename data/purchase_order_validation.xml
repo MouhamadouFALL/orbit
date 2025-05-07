@@ -26,7 +26,7 @@
                             <p><strong> <span t-esc="user.name"/> </strong> demande de valider ce Bon de commande <strong><span t-esc="object.name"/></strong> en cliquant sur le bouton ci-dessous.</p>
                             <p>
                                 <a t-att-href="env['ir.config_parameter'].sudo().get_param('web.base.urls') + '/web#id=' + str(object.id) + '&amp;view_type=form&amp;model=purchase.order'" 
-                                    style="background-color: #0e12eb; color: white; padding: 20px 40px; text-decoration: none; border-radius: 7px; display: inline-block;">
+                                    style="background-color:rgb(0, 89, 255); color: white; padding: 20px 40px; text-decoration: none; border-radius: 7px; display: inline-block;">
 
                                     Valider <span t-esc="object.name"/>
                                 </a>
