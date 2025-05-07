@@ -42,11 +42,11 @@
             <div class="oe_structure"/>
 
             <h2 class="mt-4">
-                <span t-if="env.context.get('proforma', False) or is_pro_forma">Pro-Forma Invoice : </span>
-                <span t-elif="doc.state in ['draft','sent']">Devis : </span>
-                <span t-elif="doc.type_sale == 'order'">Commande : </span>
-                <span t-elif="doc.type_sale == 'preorder'">Precommande : </span>
-                <span t-elif="doc.type_sale == 'creditorder'">Commande credit : </span>
+                <span t-if="env.context.get('proforma', False) or is_pro_forma">Pro-Forma: </span>
+                <span t-elif="doc.state in ['draft','sent']">Devis: </span>
+                <span t-elif="doc.type_sale == 'order'">Commande: </span>
+                <span t-elif="doc.type_sale == 'preorder'">Precommande: </span>
+                <span t-elif="doc.type_sale == 'creditorder'">Commande credit: </span>
                 <span t-field="doc.name"/>
             </h2>
 

@@ -32,6 +32,7 @@
                         class="oe_highlight" 
                         icon="fa-file-text"
                         data-hotkey="v"
+                        attrs="{'invisible': [('user_has_groups', 'orbit.ccbmshop_purchase_group_manager')]}"
                 />
             </field>
 
