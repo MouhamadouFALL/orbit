@@ -143,7 +143,7 @@ class Preorder(models.Model):
                             'validation_rh_partner_id': user_main.id
                         })
                         
-                        order.__code_rh = order.str_to_val("validated")
+                        # order.__code_rh = order.str_to_val("validated")
                         return True
                     else:
                         raise exceptions.ValidationError(_("Aucun utilisateur avec le rôle Principal n'est défini dans l'entreprise associée du client."))
@@ -155,7 +155,7 @@ class Preorder(models.Model):
                         'validation_rh_partner_id': self.env.user.id
                     })
                     
-                    order.__code_rh = order.str_to_val("validated")
+                    # order.__code_rh = order.str_to_val("validated")
                     return True
             else:
                 raise exceptions.ValidationError(_(
