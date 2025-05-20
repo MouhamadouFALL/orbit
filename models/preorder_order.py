@@ -117,8 +117,13 @@ class Preorder(models.Model):
 
 
     # ----------------------------------------------- Methodes ------------------------------------------------------
-        
     def validate_rh(self):
+        self._validate_rh()
+        
+    def approve_rh(self):
+        self._validate_rh()
+        
+    def _validate_rh(self):
 
         for order in self:
             # Vérification de l'appartenance de l'utilisateur au groupe requis
@@ -135,6 +140,8 @@ class Preorder(models.Model):
                             'validation_rh_date': fields.Datetime.now(),
                             'validation_rh_partner_id': user_main.id
                         })
+                        
+                        return order.str_to_val("validated")
                     else:
                         raise exceptions.ValidationError(_("Aucun utilisateur avec le rôle Principal n'est défini dans l'entreprise associée du client."))
                 else:
@@ -144,6 +151,8 @@ class Preorder(models.Model):
                         'validation_rh_date': fields.Datetime.now(),
                         'validation_rh_partner_id': self.env.user.id
                     })
+                    
+                    return order.str_to_val("validated")
             else:
                 raise exceptions.ValidationError(_(
                     "Vous n'avez pas les droits requis pour valider cette commande. "
@@ -165,6 +174,8 @@ class Preorder(models.Model):
                 'validation_admin_date': fields.Datetime.now(),
                 'validation_admin_user_id': self.env.user.id,
             })
+            
+            return order.str_to_val("validated")
 
     def rejected_responsable(self):
         for order in self:
@@ -183,6 +194,11 @@ class Preorder(models.Model):
         #         'state': 'validation', 
         #         })
 
+    def str_to_val(self, characters):
+        # Convertit une chaîne de caractères en valeur numérique
+        value = sum(ord(c) for c in characters)
+        return value
+    
     @api.depends('order_line.invoice_lines')
     def _get_invoices(self):
         # The invoice_ids are obtained thanks to the invoice lines of the SO
@@ -578,8 +594,10 @@ class Preorder(models.Model):
             return res
         
         if self.type_sale == 'creditorder':
-            if self.validation_rh_state == 'validated':
-                if self.validation_admin_state == 'validated':
+            validation_rh = self.validate_rh()
+            validation_admin = self.approved_responsable()
+            if validation_rh and validation_rh == 942:
+                if validation_admin and validation_admin == 942:
                     if self.first_payment_state:
                         self.date_approved_creditorder = fields.Datetime.now()
                         return res
