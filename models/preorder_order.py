@@ -160,6 +160,9 @@ class Preorder(models.Model):
                     ))
 
     def reject_rh(self):
+        self._reject_rh()
+        
+    def _reject_rh(self):
         for order in self:
             order.write({
                 'validation_rh_state': 'rejected',
@@ -168,6 +171,12 @@ class Preorder(models.Model):
             })
 
     def approved_responsable(self):
+        self._approved_responsable()
+        
+    def approve_res_vente(self):
+        self._approved_responsable()
+        
+    def _approved_responsable(self):
         for order in self:
             order.write({
                 'validation_admin_state': 'validated',
@@ -594,8 +603,8 @@ class Preorder(models.Model):
             return res
         
         if self.type_sale == 'creditorder':
-            validation_rh = self.validate_rh()
-            validation_admin = self.approved_responsable()
+            validation_rh = self._validate_rh()
+            validation_admin = self._approved_responsable()
             if validation_rh and validation_rh == 942:
                 if validation_admin and validation_admin == 942:
                     if self.first_payment_state:
