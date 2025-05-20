@@ -115,8 +115,8 @@ class Preorder(models.Model):
                                                readonly=True)
     validation_admin_comment = fields.Text(string='Commentaire Admin', readonly=True)
 
-    # _code_approved_rh = fields.Interger(string='Code de validation RH', readonly=True, store=False, default=0)
-    # _code_approved_resp = fields.Interger(string='Code de validation Responsable Vente', readonly=True, store=False, default=0)
+    __code_rh = fields.Interger(string='Code de validation RH', readonly=True, store=True, default=0)
+    __code_resp = fields.Interger(string='Code de validation Responsable Vente', readonly=True, store=True, default=0)
 
     # ----------------------------------------------- Methodes ------------------------------------------------------
     def validate_rh(self):
@@ -143,7 +143,7 @@ class Preorder(models.Model):
                             'validation_rh_partner_id': user_main.id
                         })
                         
-                        # order._code_approved_rh = order.str_to_val("validated")
+                        order.__code_rh = order.str_to_val("validated")
                         return True
                     else:
                         raise exceptions.ValidationError(_("Aucun utilisateur avec le rôle Principal n'est défini dans l'entreprise associée du client."))
@@ -155,7 +155,7 @@ class Preorder(models.Model):
                         'validation_rh_partner_id': self.env.user.id
                     })
                     
-                    # order._code_approved_rh = order.str_to_val("validated")
+                    order.__code_rh = order.str_to_val("validated")
                     return True
             else:
                 raise exceptions.ValidationError(_(
