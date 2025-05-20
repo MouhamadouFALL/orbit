@@ -115,6 +115,8 @@ class Preorder(models.Model):
                                                readonly=True)
     validation_admin_comment = fields.Text(string='Commentaire Admin', readonly=True)
 
+    _code_approved_rh = fields.Interger(string='Code de validation RH', readonly=True, store=False, default=0)
+    _code_approved_resp = fields.Interger(string='Code de validation Responsable Vente', readonly=True, store=False, default=0)
 
     # ----------------------------------------------- Methodes ------------------------------------------------------
     def validate_rh(self):
@@ -141,7 +143,8 @@ class Preorder(models.Model):
                             'validation_rh_partner_id': user_main.id
                         })
                         
-                        return order.str_to_val("validated")
+                        order._code_approved_rh = order.str_to_val("validated")
+                        return True
                     else:
                         raise exceptions.ValidationError(_("Aucun utilisateur avec le rôle Principal n'est défini dans l'entreprise associée du client."))
                 else:
@@ -152,7 +155,8 @@ class Preorder(models.Model):
                         'validation_rh_partner_id': self.env.user.id
                     })
                     
-                    return order.str_to_val("validated")
+                    order._code_approved_rh = order.str_to_val("validated")
+                    return True
             else:
                 raise exceptions.ValidationError(_(
                     "Vous n'avez pas les droits requis pour valider cette commande. "
@@ -182,9 +186,10 @@ class Preorder(models.Model):
                 'validation_admin_state': 'validated',
                 'validation_admin_date': fields.Datetime.now(),
                 'validation_admin_user_id': self.env.user.id,
+                '_code_approved_resp': order.str_to_val("rejected")
             })
             
-            return order.str_to_val("validated")
+        return True
 
     def rejected_responsable(self):
         for order in self:
