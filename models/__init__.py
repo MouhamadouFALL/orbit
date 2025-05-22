@@ -13,6 +13,7 @@ from . import preorder_order
 from . import sale_order_line
 from . import product_product
 from . import purchase_order
+from . import stock_picking
 from . import web_comment_product
 
 from . import stock_warehouse
