@@ -17,9 +17,10 @@ class StockPicking(models.Model):
 
                 if available_qty <= 0:
                     raise UserError(_(
-                        "Impossible de livrer le produit '%s'.\n"
-                        "Quantité disponible : %s (≤ 0).\n"
-                        "Vérifiez les stocks avant de confirmer la livraison."
+                        "Impossible de confirmer ou livrer le produit '%s' car il n'a pas de stock .\n"
+                        "Quantité disponible : %s.\n"
+                        "Vérifiez les stocks avant de confirmer la commande ou la livraison. \n"
+                        "Vous pouvez également contacter le gestionnaire de stock pour plus d'informations."
                     ) % (product.name, available_qty))
         
         return super(StockPicking, self).action_confirm()
