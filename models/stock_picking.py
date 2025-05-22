@@ -3,7 +3,7 @@ from odoo.exceptions import UserError
 
 class StockPicking(models.Model):
     _inherit = 'stock.picking'
-    _order = 'scheduled_date asc' 
+    _order = "priority desc, scheduled_date asc, id desc" 
 
     def button_validate(self):
         # Vérifier les stocks avant validation de la livraison
