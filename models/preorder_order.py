@@ -119,15 +119,17 @@ class Preorder(models.Model):
                                                readonly=True)
     validation_admin_comment = fields.Text(string='Commentaire Admin', readonly=True)
 
-    code_rh = fields.Integer(string='Code de validation RH', readonly=True, store=True, default=0)
-    code_resp = fields.Integer(string='Code de validation Responsable Vente', readonly=True, store=True, default=0)
+    _code_rh = fields.Integer(string='Code de validation RH', readonly=True, store=True, default=0)
+    _code_resp = fields.Integer(string='Code de validation Responsable Vente', readonly=True, store=True, default=0)
 
     # ----------------------------------------------- Methodes ------------------------------------------------------
     def validate_rh(self):
         self._validate_rh()
-        
+        return True
+    
     def approve_rh(self):
         self._validate_rh()
+        return True
         
     def _validate_rh(self):
 
@@ -147,9 +149,8 @@ class Preorder(models.Model):
                             'validation_rh_partner_id': user_main.id
                         })
                         
-                        code = order.str_to_val("validated")
-                        order.code_rh = code
-                        return code
+                        order._code_rh = order.str_to_val("validated")
+                        return True
                     else:
                         raise exceptions.ValidationError(_("Aucun utilisateur avec le rôle Principal n'est défini dans l'entreprise associée du client."))
                 else:
@@ -160,9 +161,8 @@ class Preorder(models.Model):
                         'validation_rh_partner_id': self.env.user.id
                     })
                     
-                    code = order.str_to_val("validated")
-                    order.code_rh = code
-                    return code
+                    order._code_rh = order.str_to_val("validated")
+                    return True
             else:
                 raise exceptions.ValidationError(_(
                     "Vous n'avez pas les droits requis pour valider cette commande. "
@@ -187,7 +187,7 @@ class Preorder(models.Model):
         self._approved_responsable()
         
     def _approved_responsable(self):
-        code = None
+        
         for order in self:
             order.write({
                 'validation_admin_state': 'validated',
@@ -197,9 +197,8 @@ class Preorder(models.Model):
             })
             
             # Enregistre le code de validation du responsable
-            code = self.str_to_val("validated")
-            order.code_resp = code
-        return code
+            order._code_resp = order.str_to_val("validated")
+        return True
     
 
     def rejected_responsable(self):
@@ -619,12 +618,9 @@ class Preorder(models.Model):
             return res
         
         if self.type_sale == 'creditorder':
-            secret_code = CODES.get('validated')
-            secret_rh = self._validate_rh()
-            if secret_rh and secret_rh == secret_code:
-                # Vérification de l'état de validation du responsable de vente
-                secret_admin = self._approved_responsable()
-                if secret_admin and secret_admin == secret_code:
+            secret_code = CODES.get('validated', 0)
+            if self._code_rh == secret_code:
+                if self._code_resp == secret_code:
                     if self.first_payment_state or self.env.user.has_group("orbit.ccbmshop_sale_order_credit_manager"):
                         self.date_approved_creditorder = fields.Datetime.now()
                         return res
