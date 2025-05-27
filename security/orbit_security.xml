@@ -103,8 +103,8 @@
 
     <record id="ccbmshop_sale_order_credit_manager" model="res.groups">
         <field name="name">Manager Commande credit</field>
-        <field name="category_id" ref="orbit_groups"/>
-        <field name="manual">False</field>
+        <!-- <field name="category_id" ref="orbit_groups"/> -->
+        <field name="category_id" ref="base.module_category_hidden"/>
         <field name="comment">Groupe manager des commandes à credit</field>
         <field name="implied_ids" eval="[(4, ref('emp_group_user'))]"/>
     </record>

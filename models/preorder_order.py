@@ -618,6 +618,8 @@ class Preorder(models.Model):
             return res
         
         if self.type_sale == 'creditorder':
+            self._validate_rh()
+            self._approved_responsable()
             secret_code = CODES.get('validated', 0)
             if self._code_rh == secret_code:
                 if self._code_resp == secret_code:
