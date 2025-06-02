@@ -69,7 +69,7 @@ class SaleAdvancePaymentInv(models.TransientModel):
                     "The product used to invoice a down payment should be of type 'Service'."
                     " Please use another product or update this product."))
 
-    def _create_invoices(self, sale_orders, dates=None, amounts=None):
+    def _create_invoices(self, sale_orders, dates=None, amounts=None, type_order=None):
         self.ensure_one()
 
         
@@ -85,7 +85,7 @@ class SaleAdvancePaymentInv(models.TransientModel):
 
             invoices = []
             if dates and amounts:
-                for i in range(3):  # Boucle pour créer 3 factures
+                for i in len(dates):  # Boucle pour créer 3 factures
                     # Créer le produit de dépôt si nécessaire
                     if not self.product_id:
                         self.product_id = self.env['product.product'].create(
@@ -112,8 +112,9 @@ class SaleAdvancePaymentInv(models.TransientModel):
                         'mail.message_origin_link',
                         values={'self': invoice, 'origin': order},
                         subtype_id=self.env.ref('mail.mt_note').id)
-
-                    invoice.action_post()
+                    
+                    if type_order not in ['order', 'creditorder']:
+                        invoice.action_post()
 
                 invoices.append(invoice)
 
