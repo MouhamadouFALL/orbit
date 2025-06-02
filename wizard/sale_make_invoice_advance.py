@@ -113,7 +113,7 @@ class SaleAdvancePaymentInv(models.TransientModel):
                         values={'self': invoice, 'origin': order},
                         subtype_id=self.env.ref('mail.mt_note').id)
                     
-                    if type_order not in ['order', 'creditorder']:
+                    if type_order == 'preorder':
                         invoice.action_post()
 
                 invoices.append(invoice)
