@@ -672,7 +672,7 @@ class Preorder(models.Model):
     #     if self.amount_residual <= 0:
     #         return self.write({ 'state': 'to_delivered' })
 
-    def _create_advance_invoices(self, dates, amounts):
+    def _create_advance_invoices(self, dates, amounts, type_order):
         for order in self:
             self.env['sale.advance.payment.inv'].create({
                 'sale_order_ids': [(6, 0, order.ids)],
