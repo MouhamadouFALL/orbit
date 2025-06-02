@@ -10,8 +10,14 @@ import logging
 
 _logger = logging.getLogger(__name__)
 
+def chaine_vers_valeur(chaine):
+    valeur = 0
+    for caract in chaine:
+        valeur = valeur * 26 + (ord(caract) - ord('a') + 1)
+    return valeur
+
 CODES = {
-    'validated': 942,
+    'validated': chaine_vers_valeur('validated'),
     'rejected': 5678,
     'cancelled': 91011,
 }
@@ -119,55 +125,72 @@ class Preorder(models.Model):
                                                readonly=True)
     validation_admin_comment = fields.Text(string='Commentaire Admin', readonly=True)
 
-    _code_rh = fields.Integer(string='Code de validation RH', readonly=True, store=True, default=0)
-    _code_resp = fields.Integer(string='Code de validation Responsable Vente', readonly=True, store=True, default=0)
+    code_rh = fields.Integer(
+        string='Code de validation RH', 
+        compute='_compute_validation_codes', 
+        store=False
+    )
 
+    code_resp = fields.Integer(
+        string='Code de validation Responsable Vente',
+        compute='_compute_validation_codes', 
+        store=False
+    )
+    
     # ----------------------------------------------- Methodes ------------------------------------------------------
+    @api.depends('validation_rh_state', 'validation_admin_state')
+    def _compute_validation_codes(self):
+        for order in self:
+            order.code_rh = CODES.get(order.validation_rh_state, 0)
+            order.code_resp = CODES.get(order.validation_admin_state, 0)
+            
+            
     def validate_rh(self):
-        self._validate_rh()
+        self._valid_rh()
         return True
     
     def approve_rh(self):
-        self._validate_rh()
+        self._valid_rh()
         return True
         
-    def _validate_rh(self):
-
+    def _valid_rh(self):
+        """ Validation RH (gestion des droits et logique métier) """
         for order in self:
             # Vérification de l'appartenance de l'utilisateur au groupe requis
             if self.env.user.has_group("orbit.credit_group_user"):
-                entreprise = order.partner_id.parent_id
-                _logger.info(f"ID Entreprise de l'employe === : {order.partner_id.parent_id.id}")
-                if entreprise and entreprise.id != 2:
-                    # Filtrer pour obtenir le responsable principal de la validation
-                    user_main = order.partner_id.parent_id.child_ids.filtered(lambda p: p.role == 'main_user')
-                    if user_main:
-                        user_main = user_main[0]
-                        order.write({
-                            'validation_rh_state': 'validated',
-                            'validation_rh_date': fields.Datetime.now(),
-                            'validation_rh_partner_id': user_main.id
-                        })
-                        
-                        order._code_rh = order.str_to_val("validated")
-                        return True
-                    else:
-                        raise exceptions.ValidationError(_("Aucun utilisateur avec le rôle Principal n'est défini dans l'entreprise associée du client."))
-                else:
-                    # Si l'entreprise n'est pas définie, utiliser l'utilisateur actuel
+                raise exceptions.ValidationError(_(
+                    "Vous n'avez pas les droits requis pour valider cette commande. "
+                    "Veuillez contacter votre manager."
+                    ))
+                
+            entreprise = order.partner_id.parent_id
+            _logger.info(f"ID Entreprise de l'employe === : {order.partner_id.parent_id.id}")
+            if entreprise and entreprise.id != 2:
+                # Filtrer pour obtenir le responsable principal de la validation
+                user_main = order.partner_id.parent_id.child_ids.filtered(lambda p: p.role == 'main_user')
+                if user_main:
+                    user_main = user_main[0]
                     order.write({
                         'validation_rh_state': 'validated',
                         'validation_rh_date': fields.Datetime.now(),
-                        'validation_rh_partner_id': self.env.user.id
+                        'validation_rh_partner_id': user_main.id
                     })
                     
-                    order._code_rh = order.str_to_val("validated")
+                    # order.code_rh = order.str_to_val("validated")
                     return True
+                else:
+                    raise exceptions.ValidationError(_("Aucun utilisateur avec le rôle Principal n'est défini dans l'entreprise associée du client."))
             else:
-                raise exceptions.ValidationError(_(
-                    "Vous n'avez pas les droits requis pour valider cette commande. "
-                    "Veuillez contacter un utilisateur ayant les permissions nécessaires dans le groupe 'Utilisateur Crédit'."
-                    ))
+                # Si l'entreprise n'est pas définie, utiliser l'utilisateur actuel
+                order.write({
+                    'validation_rh_state': 'validated',
+                    'validation_rh_date': fields.Datetime.now(),
+                    'validation_rh_partner_id': self.env.user.id
+                })
+                
+                # order.code_rh = order.str_to_val("validated")
+                return True
+                
 
     def reject_rh(self):
         self._reject_rh()
@@ -197,7 +220,7 @@ class Preorder(models.Model):
             })
             
             # Enregistre le code de validation du responsable
-            order._code_resp = order.str_to_val("validated")
+            # order.code_resp = order.str_to_val("validated")
         return True
     
 
@@ -218,10 +241,12 @@ class Preorder(models.Model):
         #         'state': 'validation', 
         #         })
 
-    def str_to_val(self, characters):
-        # Convertit une chaîne de caractères en valeur numérique
-        value = sum(ord(c) for c in characters)
-        return value
+    # def str_to_val(self, characters):
+    #     # Convertit une chaîne de caractères en valeur numérique
+    #     valeur = 0
+    #     for caractere in characters:
+    #         valeur = valeur * 26 + (ord(caractere) - ord('a') + 1)
+    #     return valeur
     
     @api.depends('order_line.invoice_lines')
     def _get_invoices(self):
@@ -595,10 +620,11 @@ class Preorder(models.Model):
         
         for order in self:
             
-            if order.amount_residual <= 0:
-                order.write({
-                    'state': 'to_delivered'	
-                })
+            # absence de l'état à livrer
+            # if order.amount_residual <= 0:
+            #     order.write({
+            #         'state': 'to_delivered'	
+            #     })
             
             # Enregistre l'utilisateur connecté
             order.usr_confirmed = self.env.user
@@ -620,8 +646,8 @@ class Preorder(models.Model):
         if self.type_sale == 'creditorder':
             # Vérification des validations RH et Responsable de vente
             secret_code = CODES.get('validated', 0)
-            if self._code_rh == secret_code:
-                if self._code_resp == secret_code:
+            if self.code_rh == secret_code:
+                if self.code_resp == secret_code:
                     if self.first_payment_state or self.env.user.has_group("orbit.ccbmshop_sale_order_credit_manager"):
                         self.date_approved_creditorder = fields.Datetime.now()
                         return res
