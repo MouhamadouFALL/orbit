@@ -85,7 +85,7 @@ class SaleAdvancePaymentInv(models.TransientModel):
 
             invoices = []
             if dates and amounts:
-                for i in len(dates):  # Boucle pour créer 3 factures
+                for i in range(len(dates)):  # Boucle pour créer 3 factures
                     # Créer le produit de dépôt si nécessaire
                     if not self.product_id:
                         self.product_id = self.env['product.product'].create(
