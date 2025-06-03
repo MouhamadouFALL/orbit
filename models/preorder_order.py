@@ -634,7 +634,7 @@ class Preorder(models.Model):
             # self._create_invoices(date).action_post()
             dates = [self.date_order]
             amounts = [self.amount_total]
-            self._create_advance_invoices(dates, amounts, 'order')
+            # self._create_advance_invoices(dates, amounts, 'order')
             self.message_post(body="La commande a été confirmée avec succès.")
             return res
         
