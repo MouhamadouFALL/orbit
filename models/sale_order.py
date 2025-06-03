@@ -135,4 +135,5 @@ class SaleOrder(models.Model):
                 for line in order.order_line
                 if line.product_id.type in ['consu', 'product']
             )
+            
                 
