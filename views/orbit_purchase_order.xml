@@ -64,7 +64,7 @@
             </xpath>
 
             <field name="product_id" position="attributes">
-                <attribute name="domain">[('product_tmpl_id.type','in', ['product', 'service'])]</attribute>
+                <attribute name="domain">[('product_tmpl_id.type','in', ['product', 'service']), ('purchase_ok', '=', True)]</attribute>
             </field>
 
         </field>
