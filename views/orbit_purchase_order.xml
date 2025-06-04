@@ -32,7 +32,7 @@
                         class="oe_highlight" 
                         icon="fa-file-text"
                         data-hotkey="v"
-                        groups="!orbit.ccbmshop_purchase_group_manager"
+                        groups="orbit.purchase_ccbmshop_group_user"
                 />
             </field>
 

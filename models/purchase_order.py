@@ -272,7 +272,7 @@ class PurchaseOrder(models.Model):
 class PurchaseOrderLine(models.Model):
     _inherit = 'purchase.order.line'
     
-    product_id = fields.Many2one('product.template', string='Product', domain=[('purchase_ok', '=', True), ('product_tmpl_id.type','in', ['product', 'service'])], change_default=True, index='btree_not_null')
+    product_id = fields.Many2one('product.template', string='Product', domain=[('purchase_ok', '=', True), ('product_tmpl_id.type','in', ['product', 'service'])], index='btree_not_null')
     
 
         
