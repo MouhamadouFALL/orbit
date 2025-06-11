@@ -632,15 +632,15 @@ class Preorder(models.Model):
         if self.type_sale == 'order':
             # date = fields.Datetime.now()
             # self._create_invoices(date).action_post()
-            dates = [self.date_order]
-            amounts = [self.amount_total]
+            # dates = [self.date_order]
+            # amounts = [self.amount_total]
             # self._create_advance_invoices(dates, amounts, 'order')
             self.message_post(body="La commande a été confirmée avec succès.")
             return res
         
         if self.type_sale == 'preorder':
-            dates = [self.first_payment_date, self.second_payment_date, self.third_payment_date]
-            amounts = [self.first_payment_amount, self.second_payment_amount, self.third_payment_amount]
+            # dates = [self.first_payment_date, self.second_payment_date, self.third_payment_date]
+            # amounts = [self.first_payment_amount, self.second_payment_amount, self.third_payment_amount]
             # self._create_advance_invoices(dates, amounts, 'preorder')
             self.message_post(body="La commande a été confirmée avec succès.")
 
@@ -672,13 +672,13 @@ class Preorder(models.Model):
     #     if self.amount_residual <= 0:
     #         return self.write({ 'state': 'to_delivered' })
 
-    def _create_advance_invoices(self, dates, amounts, type_order):
-        for order in self:
-            self.env['sale.advance.payment.inv'].create({
-                'sale_order_ids': [(6, 0, order.ids)],
-                'advance_payment_method': 'fixed',
-                'fixed_amount': amounts[0],
-            })._create_invoices(order, dates, amounts)
+    # def _create_advance_invoices(self, dates, amounts, type_order):
+    #     for order in self:
+    #         self.env['sale.advance.payment.inv'].create({
+    #             'sale_order_ids': [(6, 0, order.ids)],
+    #             'advance_payment_method': 'fixed',
+    #             'fixed_amount': amounts[0],
+    #         })._create_invoices(order, dates, amounts)
 
     @api.depends('invoices', 'invoice_ids')
     def check_invoices_paid(self):
