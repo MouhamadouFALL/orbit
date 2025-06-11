@@ -69,57 +69,57 @@ class SaleAdvancePaymentInv(models.TransientModel):
                     "The product used to invoice a down payment should be of type 'Service'."
                     " Please use another product or update this product."))
 
-    def _create_invoices(self, sale_orders, dates=None, amounts=None, type_order=None):
+    def _create_invoices(self, sale_orders, dates=None, amounts=None):
         self.ensure_one()
 
         
-        # if self.advance_payment_method == 'delivered':
-        #     sale_orders.write({'state': 'sale'})
-        #     res = sale_orders._create_invoices(final=self.deduct_down_payments)
-        #     sale_orders.write({'state': 'to_delivered'})
-        #     return res
+        if self.advance_payment_method == 'delivered':
+            # sale_orders.write({'state': 'sale'})
+            res = sale_orders._create_invoices(final=self.deduct_down_payments)
+            # sale_orders.write({'state': 'to_delivered'})
+            return res
         
-        # else:
-        self.sale_order_ids.ensure_one()
-        self = self.with_company(self.company_id)
-        order = self.sale_order_ids
+        else:
+            self.sale_order_ids.ensure_one()
+            self = self.with_company(self.company_id)
+            order = self.sale_order_ids
 
-        invoices = []
-        if dates and amounts:
-            for i in range(len(dates)):  # Boucle pour créer 3 factures
-                # Créer le produit de dépôt si nécessaire
-                if not self.product_id:
-                    self.product_id = self.env['product.product'].create(
-                        self._prepare_down_payment_product_values()
+            invoices = []
+            if dates and amounts:
+                for i in range(len(dates)):  # Boucle pour créer 3 factures
+                    # Créer le produit de dépôt si nécessaire
+                    if not self.product_id:
+                        self.product_id = self.env['product.product'].create(
+                            self._prepare_down_payment_product_values()
+                        )
+                        self.env['ir.config_parameter'].sudo().set_param(
+                            'sale.default_deposit_product_id', self.product_id.id)
+
+                    # Créer la section de paiement anticipé si nécessaire
+                    if not any(line.display_type and line.is_downpayment for line in order.order_line):
+                        self.env['sale.order.line'].create(
+                            self._prepare_down_payment_section_values(order)
+                        )
+
+                    down_payment_so_line = self.env['sale.order.line'].create(
+                        self._prepare_so_line_values(order)
                     )
-                    self.env['ir.config_parameter'].sudo().set_param(
-                        'sale.default_deposit_product_id', self.product_id.id)
 
-                # Créer la section de paiement anticipé si nécessaire
-                if not any(line.display_type and line.is_downpayment for line in order.order_line):
-                    self.env['sale.order.line'].create(
-                        self._prepare_down_payment_section_values(order)
-                    )
+                    invoice = self.env['account.move'].sudo().create(
+                        self._prepare_invoice_values(order, down_payment_so_line, dates[i], amounts[i])
+                    ).with_user(self.env.uid)  # Unsudo the invoice after creation
 
-                down_payment_so_line = self.env['sale.order.line'].create(
-                    self._prepare_so_line_values(order)
-                )
-
-                invoice = self.env['account.move'].sudo().create(
-                    self._prepare_invoice_values(order, down_payment_so_line, dates[i], amounts[i])
-                ).with_user(self.env.uid)  # Unsudo the invoice after creation
-
-                invoice.message_post_with_view(
-                    'mail.message_origin_link',
-                    values={'self': invoice, 'origin': order},
-                    subtype_id=self.env.ref('mail.mt_note').id)
-                
-                if type_order == 'preorder':
+                    invoice.message_post_with_view(
+                        'mail.message_origin_link',
+                        values={'self': invoice, 'origin': order},
+                        subtype_id=self.env.ref('mail.mt_note').id)
+                    
+                    
                     invoice.action_post()
 
-            invoices.append(invoice)
+                invoices.append(invoice)
 
-        return invoices
+            return invoices
 
     def _prepare_invoice_values(self, order, so_line, date, amount):
         self.ensure_one()
