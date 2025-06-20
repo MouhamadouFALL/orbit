@@ -14,7 +14,7 @@ STATE = [
     ('sent', "Sent"),
     ('validation', "Validation"),
     ('sale', "Commande/Precommande"),
-    ('to_delivered', "à livré"),
+    # ('to_delivered', "à livré"),
     ('delivered', "Livré"),
     ('done', "Locked"),
     ('cancel', "Cancelled"),
@@ -25,7 +25,7 @@ ORDER_STATE = [
     ('sent', "Sent"),
     ('validation', "Validation"),
     ('sale', "Commande"),
-    ('to_delivered', "à livré"),
+    # ('to_delivered', "à livré"),
     ('delivered', "Livré"),
     ('done', "Locked"),
     ('cancel', "Cancelled"),
@@ -36,7 +36,7 @@ PREORDER_STATE = [
     ('sent', "Sent"),
     ('validation', "Validation"),
     ('sale', "Pre-commande"),
-    ('to_delivered', "à livré"),
+    # ('to_delivered', "à livré"),
     ('delivered', "Livré"),
     ('done', "Locked"),
     ('cancel', "Cancelled"),
@@ -47,7 +47,7 @@ CREDITORDER_STATE = [
     ('sent', "Sent"),
     ('validation', "Validation"),
     ('sale', "Commande-credit"),
-    ('to_delivered', "à livré"),
+    # ('to_delivered', "à livré"),
     ('delivered', "Livré"),
     ('done', "Locked"),
     ('cancel', "Cancelled"),
@@ -110,13 +110,13 @@ class SaleOrder(models.Model):
 
         return super(SaleOrder, self).create(vals_list)
 
-    @api.depends("amount_residual")
-    def action_delivered(self):
-        for order in self:
-            if order.amount_residual <= 0:
-                order.write({
-                    'state': 'to_delivered'
-                })
+    # @api.depends("amount_residual")
+    # def action_delivered(self):
+    #     for order in self:
+    #         if order.amount_residual <= 0:
+    #             order.write({
+    #                 'state': 'to_delivered'
+    #             })
 
     def action_invoice_create(self):
         for order in self:
