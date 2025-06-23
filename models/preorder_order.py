@@ -157,7 +157,7 @@ class Preorder(models.Model):
         """ Validation RH (gestion des droits et logique métier) """
         for order in self:
             # Vérification de l'appartenance de l'utilisateur au groupe requis
-            if self.env.user.has_group("orbit.credit_group_user"):
+            if not self.env.user.has_group("orbit.credit_group_user"):
                 raise exceptions.ValidationError(_(
                     "Vous n'avez pas les droits requis pour valider cette commande. "
                     "Veuillez contacter votre manager."
