@@ -8,19 +8,19 @@ class ResPartner(models.Model):
     _inherit = "res.partner"
 
 
-    entreprise_code = fields.Char(string="Code Entreprise", default="Code")
+    # entreprise_code = fields.Char(string="Code Entreprise", default="Code")
     register_com = fields.Char('Registre Commercial')
     ninea = fields.Char(string='NINEA')
 
-    role = fields.Selection([
-            ('main_user', 'Utilisateur Principal'),
-            ('secondary_user', 'Utilisateur Secondaire')
-        ], string='Rôle', default='secondary_user')
-    adhesion = fields.Selection([
-            ('pending', 'En cours de validation'),
-            ('accepted', 'Accepté'),
-            ('rejected', 'Rejeté')
-        ], string='Adhésion', default='pending')
+    # role = fields.Selection([
+    #         ('main_user', 'Utilisateur Principal'),
+    #         ('secondary_user', 'Utilisateur Secondaire')
+    #     ], string='Rôle', default='secondary_user')
+    # adhesion = fields.Selection([
+    #         ('pending', 'En cours de validation'),
+    #         ('accepted', 'Accepté'),
+    #         ('rejected', 'Rejeté')
+    #     ], string='Adhésion', default='pending')
     
     # Nouveau champ pour le responsable du suivi
     payment_responsible_id = fields.Many2one('res.users', string='Follow-up Responsible',
@@ -54,20 +54,20 @@ class ResPartner(models.Model):
 
 
 
-    @api.model_create_multi
-    def create(self, vals_list):
-        """ Méthode pour générer un code unique basé sur le nom, la date de création et le rang de l'entreprise """
+    # @api.model_create_multi
+    # def create(self, vals_list):
+    #     """ Méthode pour générer un code unique basé sur le nom, la date de création et le rang de l'entreprise """
 
-        for vals in vals_list:
-            if vals.get('is_company', None):
-                code_date_creation = datetime.now().strftime('%d%m%Y')
-                code_number = self.search_count([('is_company', '=', True)]) + 1
-                code_name = str(vals.get('name')[0:4]).upper()
-                vals['entreprise_code'] = f"{code_name}{code_date_creation}{code_number}"
+    #     for vals in vals_list:
+    #         if vals.get('is_company', None):
+    #             code_date_creation = datetime.now().strftime('%d%m%Y')
+    #             code_number = self.search_count([('is_company', '=', True)]) + 1
+    #             code_name = str(vals.get('name')[0:4]).upper()
+    #             vals['entreprise_code'] = f"{code_name}{code_date_creation}{code_number}"
 
-                return super(ResPartner, self).create(vals)
-            else:
-                return super(ResPartner, self).create(vals)
+    #             return super(ResPartner, self).create(vals)
+    #         else:
+    #             return super(ResPartner, self).create(vals)
         
     
 
