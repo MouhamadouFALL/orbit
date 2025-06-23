@@ -11,18 +11,18 @@
         </menuitem>
 
         <!-- Menu CRM -->
-        <!-- <menuitem id="orbit_menu_crm" name="CRM" sequence="5"> -->
+        <menuitem id="orbit_menu_crm" name="CRM" sequence="5">
 
-            <!-- <menuitem 
+            <menuitem 
                 id="orbit_crm_menu" 
                 name="CRM" 
                 action="crm.crm_lead_action_pipeline" 
                 groups="orbit.sale_ccbmshop_group_user,orbit.com_group_user"
                 sequence="1"
-            /> -->
+            />
 
             <!-- Menu Commentaires sur les produits -->
-            <!-- <menuitem id="menu_comments" name="Commentaires Produits" 
+            <menuitem id="menu_comments" name="Commentaires Produits" 
                 action="action_comment_on_product" 
                 groups="orbit.sale_ccbmshop_group_user,orbit.com_group_user" 
                 sequence="10" />
@@ -31,7 +31,7 @@
                 groups="orbit.sale_ccbmshop_group_user,orbit.com_group_user" 
                 sequence="20"/>
 
-        </menuitem> -->
+        </menuitem>
 
         <!-- Menu Operations -->
         <menuitem id="orbit_menu_ops" name="Operations" sequence="7">
