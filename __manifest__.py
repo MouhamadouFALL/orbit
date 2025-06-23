@@ -35,7 +35,7 @@
 
         # ***************************** Dossier views *******************
         
-        # 'views/payment_details_views.xml',
+        #'views/payment_details_views.xml',
         'views/comment_product.xml',
         'views/orbit_purchase_order.xml',
         'views/res_users_views.xml',

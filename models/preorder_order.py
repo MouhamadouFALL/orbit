@@ -629,56 +629,56 @@ class Preorder(models.Model):
             # Enregistre l'utilisateur connecté
             order.usr_confirmed = self.env.user
 
-            if order.type_sale == 'order':
-                # date = fields.Datetime.now()
-                # self._create_invoices(date).action_post()
-                # dates = [self.date_order]
-                # amounts = [self.amount_total]
-                # self._create_advance_invoices(dates, amounts, 'order')
-                _logger.info(f"Commande confirmée : {order.name} - Type de vente : {order.type_sale}")
-                return res
-            
-            if order.type_sale == 'preorder':
-                dates = [order.first_payment_date, order.second_payment_date, order.third_payment_date]
-                amounts = [order.first_payment_amount, order.second_payment_amount, order.third_payment_amount]
-                order._create_advance_invoices(dates, amounts)
-                _logger.info(f"Commande confirmée : {order.name} - Type de vente : {order.type_sale}")
+        if self.type_sale == 'order':
+            # date = fields.Datetime.now()
+            # self._create_invoices(date).action_post()
+            # dates = [self.date_order]
+            # amounts = [self.amount_total]
+            # self._create_advance_invoices(dates, amounts, 'order')
+            self.message_post(body="La commande a été confirmée avec succès.")
+            return res
+        
+        if self.type_sale == 'preorder':
+            # dates = [self.first_payment_date, self.second_payment_date, self.third_payment_date]
+            # amounts = [self.first_payment_amount, self.second_payment_amount, self.third_payment_amount]
+            # self._create_advance_invoices(dates, amounts, 'preorder')
+            self.message_post(body="La commande a été confirmée avec succès.")
 
-                return res
-            
-            if order.type_sale == 'creditorder':
-                # Vérification des validations RH et Responsable de vente
-                secret_code = CODES.get('validated', 0)
-                if order.code_rh == secret_code:
-                    if order.code_resp == secret_code:
-                        if order.first_payment_state or order.env.user.has_group("orbit.ccbmshop_sale_order_credit_manager"):
-                            order.date_approved_creditorder = fields.Datetime.now()
-                            return res
-                        else:
-                            raise exceptions.ValidationError(_("Veuillez procéder au paiement du premier acompte pour valider la commande à crédit."))
+            return res
+        
+        if self.type_sale == 'creditorder':
+            # Vérification des validations RH et Responsable de vente
+            secret_code = CODES.get('validated', 0)
+            if self.code_rh == secret_code:
+                if self.code_resp == secret_code:
+                    if self.first_payment_state or self.env.user.has_group("orbit.ccbmshop_sale_order_credit_manager"):
+                        self.date_approved_creditorder = fields.Datetime.now()
+                        return res
                     else:
-                        raise exceptions.ValidationError(_(
-                            "La validation du responsable de vente est requise pour finaliser la commande à crédit." 
-                            "Veuillez contacter un responsable pour approbation."
-                            ))
+                        raise exceptions.ValidationError(_("Veuillez procéder au paiement du premier acompte pour valider la commande à crédit."))
                 else:
                     raise exceptions.ValidationError(_(
-                        "La commande à crédit nécessite l'approbation du service des ressources humaines." 
-                        "Veuillez contacter le responsable RH pour validation."
+                        "La validation du responsable de vente est requise pour finaliser la commande à crédit." 
+                        "Veuillez contacter un responsable pour approbation."
                         ))
-            
+            else:
+                raise exceptions.ValidationError(_(
+                    "La commande à crédit nécessite l'approbation du service des ressources humaines." 
+                    "Veuillez contacter le responsable RH pour validation."
+                    ))
+        
     # @api.onchange('amount_residual')
     # def _onchange_state(self):
     #     if self.amount_residual <= 0:
     #         return self.write({ 'state': 'to_delivered' })
 
-    def _create_advance_invoices(self, dates, amounts):
-        for order in self:
-            self.env['sale.advance.payment.inv'].create({
-                'sale_order_ids': [(6, 0, order.ids)],
-                'advance_payment_method': 'fixed',
-                'fixed_amount': amounts[0],
-            })._create_invoices(order, dates, amounts)
+    # def _create_advance_invoices(self, dates, amounts, type_order):
+    #     for order in self:
+    #         self.env['sale.advance.payment.inv'].create({
+    #             'sale_order_ids': [(6, 0, order.ids)],
+    #             'advance_payment_method': 'fixed',
+    #             'fixed_amount': amounts[0],
+    #         })._create_invoices(order, dates, amounts)
 
     @api.depends('invoices', 'invoice_ids')
     def check_invoices_paid(self):

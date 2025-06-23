@@ -28,17 +28,17 @@ class PurchaseOrder(models.Model):
     
     # Ajout de l'état de validation dans le modèle de bon de commande
     # 'to_validate' est un état personnalisé pour la validation
-    state = fields.Selection(selection_add=[('to_validate', 'Validation')],
-        string='Status', readonly=True, index=True, copy=False, default='draft', tracking=True,)
-    # state = fields.Selection([
-    #     ('draft', 'RFQ'),
-    #     ('sent', 'RFQ Sent'),
-    #     ('to_validate', 'Validation'),
-    #     ('to approve', 'To Approve'),
-    #     ('purchase', 'Purchase Order'),
-    #     ('done', 'Locked'),
-    #     ('cancel', 'Cancelled')
-    # ], string='Status', readonly=True, index=True, copy=False, default='draft', tracking=True)
+    # state = fields.Selection(selection_add=[('to_validate', 'Validation')],
+    #     string='Status', readonly=True, index=True, copy=False, tracking=True,)
+    state = fields.Selection([
+        ('draft', 'RFQ'),
+        ('sent', 'RFQ Sent'),
+        ('to_validate', 'Validation'),
+        ('to approve', 'To Approve'),
+        ('purchase', 'Purchase Order'),
+        ('done', 'Locked'),
+        ('cancel', 'Cancelled')
+    ], string='Status', readonly=True, index=True, copy=False, default='draft', tracking=True)
     
     # last_reminder_date = fields.Datetime(string="Dernier rappel envoyé")
     
@@ -137,7 +137,7 @@ class PurchaseOrder(models.Model):
     @api.depends('invoice_ids.state', 'invoice_ids.line_ids.matched_debit_ids.credit_move_id.payment_id.state')
     def _compute_payments(self):
         for order in self:
-            payments = self._get_valid_payments()
+            payments = order._get_valid_payments()
             # On ne prend que les factures publiées ou payées
             # invoices = order.invoice_ids.filtered(lambda inv: inv.state in ('posted', 'paid'))
             # for inv in invoices:
