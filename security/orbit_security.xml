@@ -46,6 +46,13 @@
         <!-- <field name="implied_ids" eval="[(4, ref('emp_group_user'))]"/> -->
     </record>
 
+    <record id="ccbmshop_credit_sale_order_group_manager" model="res.groups">
+        <field name="name">Manager Credit</field>
+        <field name="category_id" ref="orbit_groups"/>
+        <field name="comment">Groupe management des commandes à crédit</field>
+        <field name="implied_ids" eval="[(4, ref('emp_group_user'))]"/>
+    </record>
+
     <record id="caisse_group_user" model="res.groups">
         <field name="name">Caisse</field>
         <field name="category_id" ref="orbit_groups"/>

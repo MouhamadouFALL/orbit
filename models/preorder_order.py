@@ -168,7 +168,7 @@ class Preorder(models.Model):
             if entreprise and entreprise.id != 2:
                 # Filtrer pour obtenir le responsable principal de la validation
                 user_main = order.partner_id.parent_id.child_ids.filtered(lambda p: p.role == 'main_user')
-                if user_main:
+                if user_main or self.env.user.has_group("orbit.ccbmshop_credit_sale_order_group_manager"):
                     user_main = user_main[0]
                     order.write({
                         'validation_rh_state': 'validated',
@@ -693,10 +693,15 @@ class Preorder(models.Model):
         for order in self:
             _logger.info(f"Status de paiements {order.check_invoices_paid()}")
             if order.type_sale == 'order':
-                if order.amount_residual <= 0:
-                    return order.write({ 'state': 'to_delivered' })  
-                else:
-                    raise exceptions.ValidationError(_("Veuillez effectuer les paiements"))
+                ### Premier algorithme
+                # if order.amount_residual <= 0:
+                #     return order.write({ 'state': 'to_delivered' })  
+                # else:
+                #     raise exceptions.ValidationError(_("Veuillez effectuer les paiements"))
+                
+                # En cas de commande de type 'order' qui n'a pas de paiement résiduel
+                return order.write({ 'state': 'to_delivered' })
+              
             if order.type_sale == 'preorder':
                 if order.amount_residual <= 0 and order.advance_payment_status == 'paid':
                     return order.write({ 'state': 'to_delivered' })

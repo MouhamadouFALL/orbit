@@ -35,7 +35,7 @@ class PurchaseOrder(models.Model):
         ('sent', 'RFQ Sent'),
         ('to_validate', 'Validation'),
         ('to approve', 'To Approve'),
-        ('purchase', 'Purchase Order'),
+        ('purchase', 'Bon de Commande'),
         ('done', 'Locked'),
         ('cancel', 'Cancelled')
     ], string='Status', readonly=True, index=True, copy=False, default='draft', tracking=True)
@@ -53,13 +53,13 @@ class PurchaseOrder(models.Model):
         
         self.write({'state': 'to_validate'})
         # recuperer le modèle d'email de validation
-        template = self.env.ref('orbit.email_template_purchase_order_validation', raise_if_not_found=True)
+        template = self.env.ref('orbit.email_template_purchase_order_validation', raise_if_not_found=False)
         # recupérer le dictionnaire des emails 
         email_values = self.get_mails_usrs_from_group_usrs()
         
         for order in self:
             # Envoi de l'email de validation
-            template.send_mail(order.id, force_send=True, raise_exception=True, email_values=email_values)
+            template.send_mail(order.id, force_send=True, raise_exception=False, email_values=email_values)
             _logger.info(f"Demande de validation envoyée pour le bon de commande {order.name}")
             _logger.info(f" ++++++++++++++++ >>>>>>>>>>>>>>>>>>>>>>>>>> :::>>> {self.env['ir.config_parameter'].sudo().get_param('web.base.urls')}")
             
@@ -70,7 +70,7 @@ class PurchaseOrder(models.Model):
     def send_validation_reminders(self):
         """Envoie des rappels de validation pour tous les bons d'achat en attente de validation."""
         
-        template = self.env.ref('orbit.email_template_purchase_order_validation', raise_if_not_found=True)
+        template = self.env.ref('orbit.email_template_purchase_order_validation', raise_if_not_found=False)
         if not template:
             return
         
@@ -79,7 +79,7 @@ class PurchaseOrder(models.Model):
         email_values = self.get_mails_usrs_from_group_usrs()
         for order in purchase_orders:
             # if not order.last_reminder_date or order.last_reminder_date < threshold_time:
-            template.send_mail(order.id, force_send=True, raise_exception=True, email_values=email_values)
+            template.send_mail(order.id, force_send=False, raise_exception=False, email_values=email_values)
             _logger.info(f"++++++++++++++++++++++++ :::::::::::::: >>>>>>>>>>>>>>>>>>> Rappel de validation envoyé pour le bon de commande {order.name}")
             # order.last_reminder_date = fields.Datetime.now()
     

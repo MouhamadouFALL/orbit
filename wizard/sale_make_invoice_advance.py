@@ -57,7 +57,7 @@ class SaleAdvancePaymentInv(models.TransientModel):
                 continue
 
             # Condition supplémentaire : vérifier que la politique de facturation est dans ['order', 'delivery']
-            if wizard.product_id.invoice_policy not in ['order', 'delivery']:
+            if wizard.product_id.invoice_policy not in ['order', 'delivery', 'to_delivered', 'delivered']:
                 raise UserError(_(
                     "The product used to invoice a down payment should have an invoice policy"
                     " set to either 'Ordered quantities' or 'Delivered quantities'."
@@ -74,9 +74,9 @@ class SaleAdvancePaymentInv(models.TransientModel):
 
         
         if self.advance_payment_method == 'delivered':
-            # sale_orders.write({'state': 'sale'})
+            sale_orders.write({'state': 'sale'})
             res = sale_orders._create_invoices(final=self.deduct_down_payments)
-            # sale_orders.write({'state': 'to_delivered'})
+            sale_orders.write({'state': 'to_delivered'})
             return res
         
         else:

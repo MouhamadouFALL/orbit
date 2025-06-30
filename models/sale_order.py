@@ -101,6 +101,8 @@ class SaleOrder(models.Model):
         store=True
     )
     
+    payment_details_ids = fields.One2many('payment.details', 'sale_order_id', string="Payment Details")
+    
     
     @api.model_create_multi
     def create(self, vals_list):
