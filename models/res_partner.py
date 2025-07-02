@@ -1,26 +1,38 @@
 # -*- coding: utf-8 -*-
-
 from odoo import fields, models, api, _
-from datetime import datetime
+from odoo.exceptions import UserError, ValidationError
+from odoo.http import request
+import logging
+from datetime import datetime, timedelta
+import base64
+
+_logger = logging.getLogger(__name__)
 
 
 class ResPartner(models.Model):
     _inherit = "res.partner"
 
 
-    # entreprise_code = fields.Char(string="Code Entreprise", default="Code")
+    entreprise_code = fields.Char(string='Code entreprise')
     register_com = fields.Char('Registre Commercial')
     ninea = fields.Char(string='NINEA')
 
-    # role = fields.Selection([
-    #         ('main_user', 'Utilisateur Principal'),
-    #         ('secondary_user', 'Utilisateur Secondaire')
-    #     ], string='Rôle', default='secondary_user')
-    # adhesion = fields.Selection([
-    #         ('pending', 'En cours de validation'),
-    #         ('accepted', 'Accepté'),
-    #         ('rejected', 'Rejeté')
-    #     ], string='Adhésion', default='pending')
+    password = fields.Char(string='Mot de passe de connexion sur la partie web',  required=False)
+    role = fields.Selection([
+        ('main_user', 'Utilisateur Principal'),
+        ('secondary_user', 'Utilisateur Secondaire')
+    ], string='Rôle', default='secondary_user')
+    adhesion = fields.Selection([
+        ('pending', 'En cours de validation'),
+        ('accepted', 'Accepté'),
+        ('rejected', 'Rejeté')
+    ], string='Adhésion', default='pending')
+    
+    
+    adhesion_submit = fields.Boolean(string="Etat demande d'adhésion", default=False)
+    is_verified = fields.Boolean(string='Etat verification compte mail', default=False)
+    
+    avatar = fields.Char(string='Photo profil Client', required=False)
     
     # Nouveau champ pour le responsable du suivi
     payment_responsible_id = fields.Many2one('res.users', string='Follow-up Responsible',
@@ -50,9 +62,6 @@ class ResPartner(models.Model):
     # Nouveau champ pour la dernière date de suivi
     latest_followup_date = fields.Date('Latest Follow-up Date', compute='_compute_latest', store=False,
                                        help="Latest date that the follow-up level of the partner was changed")
-    
-
-
 
     # @api.model_create_multi
     # def create(self, vals_list):
@@ -69,5 +78,3 @@ class ResPartner(models.Model):
     #         else:
     #             return super(ResPartner, self).create(vals)
         
-    
-
