@@ -35,7 +35,10 @@
 
         # ***************************** Dossier views *******************
         
+        # assets
+        # 'views/assets.xml',
         #'views/payment_details_views.xml',
+        'views/sale_order_credit_payment_views.xml',
         'views/comment_product.xml',
         'views/orbit_purchase_order.xml',
         'views/res_users_views.xml',
@@ -63,6 +66,7 @@
         # pour le back-office
         'web.assets_backend': [
             'orbit/static/src/js/custom_script.js',
+            'orbit/static/src/css/list_view_colors.css',
         ],
         
         # pour le site web (frontend)

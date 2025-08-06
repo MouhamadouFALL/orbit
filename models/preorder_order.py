@@ -4,6 +4,7 @@ from odoo import fields, models, api, _, exceptions
 from odoo.exceptions import UserError, ValidationError
 from odoo.tools import float_compare
 from datetime import date, datetime, timedelta
+from dateutil.relativedelta import relativedelta
 from . import sale_order
 
 import logging
@@ -44,17 +45,20 @@ class Preorder(models.Model):
     )
     advance_payment_status = fields.Selection(
         selection=[
-            ("not_paid", "Not Paid"),
-            ("paid", "Paid"),
-            ("partial", "Partially Paid"),
+            ("not_paid", "Non Payé"),
+            ("paid", "Payé"),
+            ("partial", "Paiemnt en cours"),
         ],
         store=True,
         readonly=True,
         copy=False,
+        string="Etat Paiements",
+        help="Indicates the status of the advance payment for this order.",
         tracking=True,
         compute_sudo=True,
         compute="_compute_advance_payment",
     )
+    payment_count = fields.Float(compute_sudo=True, compute="_compute_advance_payment")
     
     # Gestion des commandes échue
     state_due = fields.Selection(
@@ -69,7 +73,7 @@ class Preorder(models.Model):
         help="Indique si la commande a des échéances à venir ou dépassées"
     )
     days_util_due = fields.Integer(
-        string="Jours avant/après échéance", 
+        string="Avant/Après échéance", 
         compute="_compute_is_due", 
         store=True,
         help="Négatif pour les échéances à venir (-5 à 0), positif pour les retard"
@@ -81,7 +85,6 @@ class Preorder(models.Model):
         help="Montant total des échéances dépassées"
     )
     
-    payment_count = fields.Float(compute_sudo=True, compute="_compute_advance_payment")
 
     # Les dates 
     date_approved_creditorder = fields.Datetime("Date confirmation commande credit", store=True)
@@ -137,6 +140,31 @@ class Preorder(models.Model):
         store=False
     )
     
+    # paramétrables dynamiquement les montants et les dates pour les commandes à crédit
+    creditorder_month_count = fields.Integer(
+        string="Nombre d'échéance",
+        default=4,
+        help="Nombre de paiements mensuels pour une commande à crédit."
+    )
+    
+    credit_month_rate = fields.Char(
+        string="Taux d'Acompte (%)",
+        default='50',
+        help="Taux de répartition des montants pour chaque mois, séparés par des virgules (ex: 50,20,15,15)"
+    )
+    
+    credit_payment_ids = fields.One2many(
+        'sale.order.credit.payment',
+        'order_id',
+        domain="[('order_id', '=', id)]",
+        string="Échéances de paiement crédit",
+        compute='_compute_credit_payment_duedate_data',
+        readonly=True,
+        store=True,
+    )
+    
+    # is_credit_customer = fields.Boolean('Crédit à Personnaliser', store=True)
+                
     # ----------------------------------------------- Methodes ------------------------------------------------------
     @api.depends('validation_rh_state', 'validation_admin_state')
     def _compute_validation_codes(self):
@@ -167,30 +195,34 @@ class Preorder(models.Model):
             _logger.info(f"ID Entreprise de l'employe === : {order.partner_id.parent_id.id}")
             if entreprise and entreprise.id != 2:
                 # Filtrer pour obtenir le responsable principal de la validation
-                user_main = order.partner_id.parent_id.child_ids.filtered(lambda p: p.role == 'main_user')
-                if user_main or self.env.user.has_group("orbit.ccbmshop_credit_sale_order_group_manager"):
+                user_main = order.partner_id.parent_id.child_ids.filtered(lambda child: child.role == 'main_user')
+                if user_main:
+                    # order.code_rh = order.str_to_val("validated")
                     user_main = user_main[0]
                     order.write({
                         'validation_rh_state': 'validated',
                         'validation_rh_date': fields.Datetime.now(),
                         'validation_rh_partner_id': user_main.id
                     })
+                    _logger.info(f"Utilisateur principal RH {user_main.name} vient de valider la commande.")
                     
-                    # order.code_rh = order.str_to_val("validated")
                     return True
+                     
+                elif self.env.user.has_group("orbit.ccbmshop_credit_sale_order_group_manager"):
+                    order.write({
+                        'validation_rh_state': 'validated',
+                        'validation_rh_date': fields.Datetime.now(),
+                        'validation_rh_partner_id': self.env.user.partner_id.id
+                    })
+                    _logger.info(f"le manager des commandes à crédit {self.env.user.name} vient de valider la commande.")
+                    
+                    return True
+                
                 else:
                     raise exceptions.ValidationError(_("Aucun utilisateur avec le rôle Principal n'est défini dans l'entreprise associée du client."))
             else:
-                # Si l'entreprise n'est pas définie, utiliser l'utilisateur actuel
-                order.write({
-                    'validation_rh_state': 'validated',
-                    'validation_rh_date': fields.Datetime.now(),
-                    'validation_rh_partner_id': self.env.user.id
-                })
                 
-                # order.code_rh = order.str_to_val("validated")
-                return True
-                
+                raise exceptions.ValidationError(_("Le client doit contacter son entreprise associée ou contactez le manager des commandes à crédits ."))
 
     def reject_rh(self):
         self._reject_rh()
@@ -212,15 +244,18 @@ class Preorder(models.Model):
     def _approved_responsable(self):
         
         for order in self:
+            if not self.env.user.has_group("orbit.ccbmshop_credit_sale_order_group_manager"):
+                raise exceptions.ValidationError(_(
+                    "Vous n'avez pas les droits requis pour valider cette commande. "
+                    "Veuillez contacter votre manager."
+                    ))
+                
             order.write({
                 'validation_admin_state': 'validated',
                 'validation_admin_date': fields.Datetime.now(),
                 'validation_admin_user_id': self.env.user.id,
-                # '_code_approved_resp': order.str_to_val("rejected")
             })
             
-            # Enregistre le code de validation du responsable
-            # order.code_resp = order.str_to_val("validated")
         return True
     
 
@@ -236,17 +271,6 @@ class Preorder(models.Model):
         self.write({
                 'state': 'validation', 
                 })
-        # for order in self:
-        #     order.write({
-        #         'state': 'validation', 
-        #         })
-
-    # def str_to_val(self, characters):
-    #     # Convertit une chaîne de caractères en valeur numérique
-    #     valeur = 0
-    #     for caractere in characters:
-    #         valeur = valeur * 26 + (ord(caractere) - ord('a') + 1)
-    #     return valeur
     
     @api.depends('order_line.invoice_lines')
     def _get_invoices(self):
@@ -258,29 +282,6 @@ class Preorder(models.Model):
             invoices = order.order_line.invoice_lines.move_id.filtered(lambda r: r.move_type in ('out_invoice', 'out_refund'))
             order.invoices = invoices
 
-    # def action_view_payments(self):
-    #     payments = self.mapped("account_payment_ids")
-    #     action_ref = 'account.action_account_payments'
-    #     # action_ref = 'account.action_move_out_invoice_type'
-    #     action = self.env['ir.actions.act_window']._for_xml_id(action_ref)
-    #     action['domain'] = [('id', 'in', payments.ids), ('sale_id', '=', self.id)]
-    #     action['context'] = {
-    #         'default_partner_id': self.partner_id.id,
-    #         'default_sale_id': self.id,
-    #         'default_payment_type': 'inbound',
-    #         'default_ref': self.name,
-    #         'default_date': fields.Datetime.today(),
-    #         }
-        
-    #     if self.amount_payed < self.first_payment_amount:
-    #         action['context']['default_amount'] = self.first_payment_amount
-    #     elif self.amount_payed < (self.first_payment_amount + self.second_payment_amount):
-    #         action['context']['default_amount'] = self.second_payment_amount
-    #     else:
-    #         action['context']['default_amount'] = self.third_payment_amount
-
-    #     return action
-    
     def action_view_payments(self):
         """Action pour visualiser les paiements liés"""
               
@@ -343,75 +344,61 @@ class Preorder(models.Model):
         orders = self.search([])
         orders._compute_is_due()
         
-    @api.depends('first_payment_date', 'first_payment_state', 'first_payment_amount',
-                 'second_payment_date', 'second_payment_state', 'second_payment_amount',
-                 'third_payment_date', 'third_payment_state', 'third_payment_amount',
-                 'fourth_payment_date', 'fourth_payment_state', 'fourth_payment_amount',
-                 'type_sale', 'validity_date', 'amount_residual', 'advance_payment_status')
+    @api.depends(
+        'credit_payment_ids.due_date',
+        'credit_payment_ids.state',
+        'credit_payment_ids.amount',
+        'type_sale',
+        'validity_date',
+        'amount_residual',
+        'advance_payment_status'
+    )
     def _compute_is_due(self):
         current_date = fields.Date.context_today(self)
+
         for order in self:
-            # Par défaut, on réinitialise les valeurs
+            # Valeurs par défaut
             order.state_due = 'not_due'
             order.days_util_due = 0
             order.overdue_amount = 0.0
 
-            # 1. Cas des commandes de type preorder et creditorder
             if order.type_sale in ['preorder', 'creditorder']:
                 relevant_diffs = []
                 overdue_total = 0.0
-                payment_data = [
-                    (order.first_payment_date, order.first_payment_state, order.first_payment_amount),
-                    (order.second_payment_date, order.second_payment_state, order.second_payment_amount),
-                    (order.third_payment_date, order.third_payment_state, order.third_payment_amount),
-                    (order.fourth_payment_date, order.fourth_payment_state, order.fourth_payment_amount)
-                ]
-                for pay_date, pay_state, pay_amount in payment_data:
-                    # On considère uniquement les échéances ayant une date et dont l'état n'est pas renseigné (non payé)
-                    if pay_date and not pay_state:
-                        days_diff = (current_date - pay_date).days
+
+                for line in order.credit_payment_ids:
+                    if line.due_date and not line.state:
+                        days_diff = (current_date - line.due_date).days
                         relevant_diffs.append(days_diff)
-                        # Si l'échéance est dépassée (days_diff >= 0), on cumule le montant correspondant
                         if days_diff >= 0:
-                            overdue_total += pay_amount
+                            overdue_total += line.amount
 
                 if relevant_diffs:
-                    # S'il y a au moins une échéance dépassée, on considère la commande comme due
                     overdue_diffs = [d for d in relevant_diffs if d > 0]
                     if overdue_diffs:
                         order.state_due = 'due'
-                        # On prend le retard maximal pour information
                         order.days_util_due = max(overdue_diffs)
                         order.overdue_amount = overdue_total
                     else:
-                        # Dans le cas où les échéances ne sont pas encore dépassées
                         order.state_due = 'not_due'
                         order.days_util_due = max(relevant_diffs)
                         order.overdue_amount = 0.0
 
-            # 2. Cas des commandes de type order
             elif order.type_sale == 'order' and order.validity_date:
-                # Si la date de validité est dépassée
                 if order.validity_date < current_date:
-                    # Et s'il reste un solde dû ou que le statut de paiement n'est pas "paid"
                     if order.amount_residual > 0 or order.advance_payment_status != 'paid':
                         order.state_due = 'due'
-                        # Le nombre de jours en retard est calculé depuis la date de validité
                         order.days_util_due = (current_date - order.validity_date).days
-                        # Ici, on considère le montant restant dû comme montant en retard
                         order.overdue_amount = order.amount_residual
                     else:
-                        # Si le solde est réglé, on ne considère pas la commande comme due
                         order.state_due = 'not_due'
                         order.days_util_due = 0
                         order.overdue_amount = 0.0
-
-            # 3. Pour les autres cas, on laisse les valeurs par défaut : non due
             else:
                 order.state_due = 'not_due'
                 order.days_util_due = 0
-                order.overdue_amount = 0.0    
-        
+                order.overdue_amount = 0.0
+
                     
     @api.depends(
             'order_line.price_subtotal', 
@@ -619,29 +606,14 @@ class Preorder(models.Model):
         res = super(Preorder, self).action_confirm()
         
         for order in self:
-            
-            # absence de l'état à livrer
-            # if order.amount_residual <= 0:
-            #     order.write({
-            #         'state': 'to_delivered'	
-            #     })
-            
             # Enregistre l'utilisateur connecté
             order.usr_confirmed = self.env.user
 
         if self.type_sale == 'order':
-            # date = fields.Datetime.now()
-            # self._create_invoices(date).action_post()
-            # dates = [self.date_order]
-            # amounts = [self.amount_total]
-            # self._create_advance_invoices(dates, amounts, 'order')
             self.message_post(body="La commande a été confirmée avec succès.")
             return res
         
         if self.type_sale == 'preorder':
-            # dates = [self.first_payment_date, self.second_payment_date, self.third_payment_date]
-            # amounts = [self.first_payment_amount, self.second_payment_amount, self.third_payment_amount]
-            # self._create_advance_invoices(dates, amounts, 'preorder')
             self.message_post(body="La commande a été confirmée avec succès.")
 
             return res
@@ -666,19 +638,6 @@ class Preorder(models.Model):
                     "La commande à crédit nécessite l'approbation du service des ressources humaines." 
                     "Veuillez contacter le responsable RH pour validation."
                     ))
-        
-    # @api.onchange('amount_residual')
-    # def _onchange_state(self):
-    #     if self.amount_residual <= 0:
-    #         return self.write({ 'state': 'to_delivered' })
-
-    # def _create_advance_invoices(self, dates, amounts, type_order):
-    #     for order in self:
-    #         self.env['sale.advance.payment.inv'].create({
-    #             'sale_order_ids': [(6, 0, order.ids)],
-    #             'advance_payment_method': 'fixed',
-    #             'fixed_amount': amounts[0],
-    #         })._create_invoices(order, dates, amounts)
 
     @api.depends('invoices', 'invoice_ids')
     def check_invoices_paid(self):
@@ -693,12 +652,6 @@ class Preorder(models.Model):
         for order in self:
             _logger.info(f"Status de paiements {order.check_invoices_paid()}")
             if order.type_sale == 'order':
-                ### Premier algorithme
-                # if order.amount_residual <= 0:
-                #     return order.write({ 'state': 'to_delivered' })  
-                # else:
-                #     raise exceptions.ValidationError(_("Veuillez effectuer les paiements"))
-                
                 # En cas de commande de type 'order' qui n'a pas de paiement résiduel
                 return order.write({ 'state': 'to_delivered' })
               
@@ -796,7 +749,306 @@ class Preorder(models.Model):
                 template = self.env.ref('orbit.order_overdue_reminder_template', raise_if_not_found=False)
                 if template:
                     template.send_mail(order.id, force_send=True)
-                    
-        
+                                
+    # @api.onchange('is_credit_customer')
+    # def _onchange_credit_customization(self):
+    #     for order in self:
+    #         if order.type_sale != 'creditorder':
+    #             continue # Ne rien faire
+
+    #         # Supprimer/Réinitialiser les lignes si personnalisation activée
+    #         order.credit_payment_ids = [(5, 0, 0)]  
+    #         if not order.is_credit_customer:
+    #             # Recalculer les lignes automatiquement
+    #             order._compute_credit_payment_duedate_data()
+                
+
+    @api.depends(
+        'type_sale',
+        'date_approved_creditorder',
+        'creditorder_month_count',
+        'order_line.price_total',
+        'credit_payment_ids.rate',
+        'credit_month_rate'
+    )
+    def _compute_credit_payment_duedate_data(self):
+        for order in self:
+            if order.type_sale != 'creditorder':
+                order.credit_payment_ids = [(5, 0, 0)]
+                continue
+
+            # if order.is_credit_customer:
+            #     # En mode personnalisation, ne pas recalculer sauf cas spécial
+            #     month_count = order.creditorder_month_count
+            #     if not order.credit_month_rate or month_count < 1:
+            #         continue
+
+            #     try:
+            #         rates_raw = [float(rate.strip()) for rate in order.credit_month_rate.split(',')]
+            #     except ValueError:
+            #         continue
+
+            #     rates_list = []
+            #     provided_len = len(rates_raw)
+            #     sum_provided = sum(rates_raw)
+
+            #     if provided_len < month_count:
+            #         remaining = max(0.0, 100.0 - sum_provided)
+            #         remaining_slots = month_count - provided_len
+            #         if remaining_slots > 0:
+            #             equal_rate = round(remaining / remaining_slots, 2)
+            #             rates_list = rates_raw + [equal_rate] * remaining_slots
+            #             diff = round(100.0 - sum(rates_list), 2)
+            #             rates_list[-1] += diff
+            #         else:
+            #             rates_list = rates_raw
+            #     else:
+            #         rates_list = rates_raw[:month_count]
+
+            #     # Compléter si encore insuffisant
+            #     if len(rates_list) < month_count:
+            #         rates_list += [0.0] * (month_count - len(rates_list))
+
+            #     base_date = order.date_approved_creditorder or fields.Datetime.now()
+            #     commands = []
+
+            #     for i in range(month_count):
+            #         due_date = base_date + relativedelta(months=i)
+            #         commands.append((0, 0, {
+            #             'sequence': i + 1,
+            #             'due_date': due_date.date(),
+            #             'rate': rates_list[i],
+            #             'amount': 0.0,
+            #             'state': False
+            #         }))
+            #     order.credit_payment_ids = commands
+            #     continue  # pas de calcul de montant ici
+
+            # Mode automatique (is_credit_customer == False)
+            # Récupérer les lignes produits hors acompte
+            order_lines = order.order_line.filtered(lambda x: not x.is_downpayment)
+            total_amount = sum(order_lines.mapped('price_total')) or 0.0
+            month_count = order.creditorder_month_count
+            base_date = order.date_approved_creditorder or fields.Datetime.now()
+
+            try:
+                rates_raw = [float(rate.strip()) for rate in order.credit_month_rate.split(',')]
+            except ValueError:
+                rates_raw = [100.0]  # fallback
+
+            rates_list = []
+            provided_len = len(rates_raw)
+            sum_provided = sum(rates_raw)
+
+            if provided_len < month_count:
+                remaining = max(0.0, 100.0 - sum_provided)
+                remaining_slots = month_count - provided_len
+                if remaining_slots > 0:
+                    equal_rate = round(remaining / remaining_slots, 2)
+                    rates_list = rates_raw + [equal_rate] * remaining_slots
+                    diff = round(100.0 - sum(rates_list), 2)
+                    rates_list[-1] += diff
+                else:
+                    rates_list = rates_raw
+            else:
+                rates_list = rates_raw[:month_count]
+
+            if len(rates_list) < month_count:
+                rates_list += [0.0] * (month_count - len(rates_list))
+
+            # Réutiliser les échéances existantes
+            existing_installments = {inst.sequence: inst for inst in order.credit_payment_ids}
+            total_rate = 0.0
+            manual_amounts = 0.0
+
+            for month in range(1, month_count + 1):
+                rate = rates_list[month - 1]
+                if month in existing_installments and existing_installments[month].is_amount_manual:
+                    manual_amounts += existing_installments[month].amount
+                else:
+                    total_rate += rate
+
+            remaining_amount = total_amount - manual_amounts
+            commands = []
+
+            for month in range(1, month_count + 1):
+                due_date = base_date + relativedelta(months=month - 1)
+                rate = rates_list[month - 1]
+                if month in existing_installments:
+                    inst = existing_installments[month]
+                    update_vals = {'due_date': due_date.date(), 'rate': rate}
+                    if not inst.is_amount_manual:
+                        update_vals['amount'] = remaining_amount * (rate / total_rate) if total_rate else 0.0
+                    commands.append((1, inst.id, update_vals))
+                else:
+                    installment_amount = remaining_amount * (rate / total_rate) if total_rate else 0.0
+                    commands.append((0, 0, {
+                        'sequence': month,
+                        'due_date': due_date.date(),
+                        'rate': rate,
+                        'amount': installment_amount,
+                        'state': False
+                    }))
+
+            # Supprimer les échéances excédentaires
+            valid_sequences = set(range(1, month_count + 1))
+            for seq, inst in existing_installments.items():
+                if seq not in valid_sequences:
+                    commands.append((2, inst.id, 0))
+
+            # Ajustement final pour corriger les arrondis
+            amounts_sum = 0.0
+            for cmd in commands:
+                if cmd[0] == 0:
+                    amounts_sum += cmd[2].get('amount', 0.0)
+                elif cmd[0] == 1:
+                    inst = existing_installments.get(cmd[1])
+                    if inst:
+                        if inst.is_amount_manual:
+                            amounts_sum += inst.amount
+                        else:
+                            amounts_sum += cmd[2].get('amount', inst.amount)
+
+            diff = total_amount - (amounts_sum + manual_amounts)
+            if abs(diff) > 0.01:
+                # Trouver la dernière échéance non manuelle
+                last_seq = None
+                for month in range(month_count, 0, -1):
+                    if month in existing_installments:
+                        if not existing_installments[month].is_amount_manual:
+                            last_seq = month
+                            break
+                    else:
+                        last_seq = month
+                        break
+                if last_seq:
+                    for idx, cmd in enumerate(commands):
+                        if (cmd[0] == 1 and existing_installments.get(cmd[1]) and existing_installments[cmd[1]].sequence == last_seq) \
+                        or (cmd[0] == 0 and cmd[2]['sequence'] == last_seq):
+                            if cmd[0] == 1:
+                                cmd[2]['amount'] += diff
+                            else:
+                                cmd[2]['amount'] += diff
+                            break
+
+            order.credit_payment_ids = commands
+
+    @api.onchange('credit_payment_ids', 'order_line')
+    def _onchange_installments(self):
+        for order in self:
+            if order.type_sale != 'creditorder' or not order.credit_payment_ids:
+                return
+                
+            # Calculer le total
+            order_lines = order.order_line.filtered(lambda x: not x.is_downpayment)
+            total_amount = sum(order_lines.mapped('price_total')) or 0.0
+            
+            # Calculer la somme des échéances
+            installments_total = sum(order.credit_payment_ids.mapped('amount'))
+            
+            # Ajuster la dernière échéance si différence
+            if abs(total_amount - installments_total) > 0.01:
+                last_installment = max(order.credit_payment_ids, key=lambda x: x.sequence)
+                if not last_installment.is_amount_manual:
+                    last_installment.amount += total_amount - installments_total
+                    last_installment.is_amount_manual = True
+
+# ------------------------------------------ Modèle pour les paiements mensuels des commandes à crédit ----------------------
+class SaleOrderPaymentInstallment(models.Model):
+    _name = 'sale.order.credit.payment'
+    _description = "Installment de paiement pour commande à crédit"
+    _order = 'sequence'
+
+    _sql_constraints = [
+        ('unique_sequence_per_order', 'UNIQUE(order_id, sequence)', 'La séquence doit être unique par commande!')
+    ]
+
+    sequence = fields.Integer(string="Mois", required=True)
+    due_date = fields.Date(string="Date d'échéance")
+    amount = fields.Float(string="Montant", digits=(16, 2))
+    state = fields.Boolean(string="Payé", compute='_compute_paid_amount_and_state', store=True)
+    order_id = fields.Many2one('sale.order', string="Commande", ondelete='cascade')
+    rate = fields.Float(string="Taux (%)", digits=(5,2), default=0.0)
+    is_amount_manual = fields.Boolean(string="Montant modifié", default=False)
+    
+    currency_id = fields.Many2one(related='order_id.currency_id', string="Devise", readonly=True, store=True)
+    paid_amount = fields.Monetary(string="Montant payé", compute='compute_paid_amount_and_state', store=True)
+    # is_paid = fields.Boolean(string="Payée ?", compute='_compute_paid_amount', store=True)
+    
+    
+    @api.onchange('order_id')
+    def _onchange_order_id_currency(self):
+        for rec in self:
+            if rec.order_id:
+                rec.currency_id = rec.order_id.currency_id
+                
+    @api.depends(
+        'order_id.account_payment_ids.state',
+        'order_id.account_payment_ids.amount',
+        'order_id.invoice_ids.payment_state',
+        'order_id.invoice_ids.amount_residual',
+        'order_id.invoice_ids.amount_total',
+    )
+    def _compute_paid_amount_and_state(self):
+        for record in self:
+            order = record.order_id
+
+            # Paiements liés à la commande
+            cmd_payments = order.account_payment_ids.filtered(lambda p: p.state == 'posted')
+            cmd_paid_amount = sum(cmd_payments.mapped('amount'))
+
+            # Paiements sur factures liées
+            invoices = order.invoice_ids.filtered(lambda inv: inv.state == 'posted')
+            inv_paid_amount = sum(inv.amount_total - inv.amount_residual for inv in invoices)
+
+            total_paid = cmd_paid_amount + inv_paid_amount
+
+            # Attribution des paiements aux lignes
+            # payment_lines = order.credit_payment_ids.sorted('id')
+            payment_lines = sorted(order.credit_payment_ids, key=lambda l: l.id if isinstance(l.id, int) else 0)
+            paid_so_far = 0.0
+
+            for line in payment_lines:
+                if total_paid >= paid_so_far + line.amount:
+                    line.paid_amount = line.amount
+                    line.state = True
+                    paid_so_far += line.amount
+                elif total_paid > paid_so_far:
+                    # Paiement partiel
+                    line.paid_amount = total_paid - paid_so_far
+                    line.state = False
+                    paid_so_far = total_paid
+                else:
+                    line.paid_amount = 0.0
+                    line.state = False
 
 
+    
+    @api.constrains('order_id', 'rate', 'amount')
+    def _check_credit_rate_total(self):
+        for order in self.mapped('order_id'):
+            if order.type_sale != 'creditorder':
+                continue
+            
+            commands = order.credit_payment_ids.sorted('sequence')
+            total_rate = sum(commands.mapped('rate'))
+    
+    @api.onchange('rate', 'order_id.order_line')
+    def _onchange_rate_update_amount(self):
+        for rec in self:
+            if not rec.order_id or not rec.order_id.order_line:
+                continue
+            total = sum(rec.order_id.order_line.filtered(lambda l: not l.is_downpayment).mapped('price_total'))
+            if total and not rec.is_amount_manual:
+                rec.amount = round((rec.rate / 100.0) * total, 2)
+            
+    @api.onchange('amount')
+    def _onchange_amount_update_rate(self):
+        for rec in self:
+            if not rec.order_id or not rec.order_id.order_line:
+                continue
+            total = sum(rec.order_id.order_line.filtered(lambda l: not l.is_downpayment).mapped('price_total'))
+            if total:
+                rec.rate = round((rec.amount / total) * 100.0, 2)
+                rec.is_amount_manual = True
+                

@@ -96,7 +96,8 @@
         <menuitem id="orbit_menu_config" name="Configuration" groups="orbit.admin_group_user" sequence="15">
             <menuitem id="orbit_menu_users" name="Users" action="base.action_res_users" groups="orbit.admin_group_user" sequence="1"/>
             <menuitem id="orbit_menu_eq_commerciales" name="Teams Sale" action="sales_team.crm_team_action_config" sequence="2"/>
-            <menuitem id="menu_product_price_update_wizard" name="Mettre à jour les prix" action="orbit.action_update_product_prices" sequence="2"/>
+            <menuitem id="menu_product_price_update_wizard" name="Mettre à jour les prix" action="orbit.action_update_product_prices" sequence="3"/>
+            <menuitem id="menu_sale_order_credit_payment" name="Liste échéances" action="orbit.action_sale_order_credit_payment" sequence="4"/>
             <!-- <menuitem id="menu_payment_details" name="Détails de paiement" action="action_payment_details" groups="orbit.admin_group_user"/> -->
         </menuitem>
 

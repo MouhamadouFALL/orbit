@@ -1,38 +1,26 @@
 # -*- coding: utf-8 -*-
-from odoo import fields, models, api, _
-from odoo.exceptions import UserError, ValidationError
-from odoo.http import request
-import logging
-from datetime import datetime, timedelta
-import base64
 
-_logger = logging.getLogger(__name__)
+from odoo import fields, models, api, _
+from datetime import datetime
 
 
 class ResPartner(models.Model):
     _inherit = "res.partner"
 
 
-    entreprise_code = fields.Char(string='Code entreprise')
+    #entreprise_code = fields.Char(string="Code Entreprise", default="Code")
     register_com = fields.Char('Registre Commercial')
     ninea = fields.Char(string='NINEA')
 
-    password = fields.Char(string='Mot de passe de connexion sur la partie web',  required=False)
     role = fields.Selection([
-        ('main_user', 'Utilisateur Principal'),
-        ('secondary_user', 'Utilisateur Secondaire')
-    ], string='Rôle', default='secondary_user')
+            ('main_user', 'Utilisateur Principal'),
+            ('secondary_user', 'Utilisateur Secondaire')
+        ], string='Rôle', default='secondary_user')
     adhesion = fields.Selection([
-        ('pending', 'En cours de validation'),
-        ('accepted', 'Accepté'),
-        ('rejected', 'Rejeté')
-    ], string='Adhésion', default='pending')
-    
-    
-    adhesion_submit = fields.Boolean(string="Etat demande d'adhésion", default=False)
-    is_verified = fields.Boolean(string='Etat verification compte mail', default=False)
-    
-    avatar = fields.Char(string='Photo profil Client', required=False)
+            ('pending', 'En cours de validation'),
+            ('accepted', 'Accepté'),
+            ('rejected', 'Rejeté')
+        ], string='Adhésion', default='pending')
     
     # Nouveau champ pour le responsable du suivi
     payment_responsible_id = fields.Many2one('res.users', string='Follow-up Responsible',

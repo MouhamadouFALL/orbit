@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <odoo>
-    <record id="assets_backend_inherit_ccbmshop_menu" model="ir.ui.view">
+    <!-- <record id="assets_backend_inherit_ccbmshop_menu" model="ir.ui.view">
         <field name="name">orbit.assets_backend</field>
         <field name="inherit_id" ref="web.assets_backend"/>
         <field name="arch" type="xml">
@@ -8,5 +8,12 @@
                 <link rel="stylesheet" type="text/css" href="/orbit/static/src/css/orbit.css"/>
             </xpath>
         </field>
-    </record>
+    </record> -->
+
+    <template id="assets_backend" inherit_id="web.assets_backend">
+        <xpath expr="." position="inside">
+            <link rel="stylesheet" href="/orbit/static/src/css/list_view_colors.css"/>
+        </xpath>
+    </template>
+
 </odoo>
