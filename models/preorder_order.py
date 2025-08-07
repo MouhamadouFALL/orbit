@@ -974,27 +974,50 @@ class Preorder(models.Model):
                 date = getattr(order, f"{index}_payment_date", None)
                 amount = getattr(order, f"{index}_payment_amount", 0.0)
                 state = getattr(order, f"{index}_payment_state", None)
+                
+                if not date or not amount:
+                    continue
 
-                if date and amount:
-                    echeances.append({
-                        'sequence': idx,
-                        'due_date': date,
-                        'amount': amount,
-                        'state': bool(state),
-                        'rate': round((amount / total) * 100.0, 2) ,
-                        
-                    })
+                # Vérifier si une ligne avec ce sequence existe déjà
+                # Vérifier si une ligne avec ce sequence existe déjà
+                existing = self.env['sale.order.credit.payment'].search([
+                    ('order_id', '=', order.id),
+                    ('sequence', '=', idx)
+                ], limit=1)
 
-            # Créer les lignes si des données sont présentes
-            for line in echeances:
+                if existing:
+                    continue  # Ne pas créer de doublon
+                
+                # Créer la ligne
                 self.env['sale.order.credit.payment'].create({
-                    'sequence': line['sequence'],
                     'order_id': order.id,
-                    'due_date': line['due_date'],
-                    'amount': line['amount'],
-                    'state': line['state'],
-                    'rate': line['rate'],
+                    'sequence': idx,
+                    'due_date': date,
+                    'amount': amount,
+                    'state': bool(state),
+                    'rate': round((amount / total) * 100.0, 2),
                 })
+
+                # if date and amount:
+                #     echeances.append({
+                #         'sequence': idx,
+                #         'due_date': date,
+                #         'amount': amount,
+                #         'state': bool(state),
+                #         'rate': round((amount / total) * 100.0, 2) ,
+                        
+                #     })
+
+                # Créer les lignes si des données sont présentes
+                # for line in echeances:
+                #     self.env['sale.order.credit.payment'].create({
+                #         'sequence': line['sequence'],
+                #         'order_id': order.id,
+                #         'due_date': line['due_date'],
+                #         'amount': line['amount'],
+                #         'state': line['state'],
+                #         'rate': line['rate'],
+                #     })
 
 # ------------------------------------------ Modèle pour les paiements mensuels des commandes à crédit ----------------------
 class SaleOrderPaymentInstallment(models.Model):
