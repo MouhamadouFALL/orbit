@@ -193,7 +193,7 @@ class Preorder(models.Model):
                 
             entreprise = order.partner_id.parent_id
             _logger.info(f"ID Entreprise de l'employe === : {order.partner_id.parent_id.id}")
-            if entreprise and entreprise.id != 2:
+            if (entreprise and entreprise.id != 2) or (self.env.user.has_group("orbit.ccbmshop_credit_sale_order_group_manager")):
                 # Filtrer pour obtenir le responsable principal de la validation
                 user_main = order.partner_id.parent_id.child_ids.filtered(lambda child: child.role == 'main_user')
                 if user_main:

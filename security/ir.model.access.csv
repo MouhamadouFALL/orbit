@@ -4,7 +4,7 @@ access_res_users_orbit,res.users.orbit,model_res_users,base.group_erp_manager,1,
 
 access_res_partner,res.partner.orbit,model_res_partner,base.group_erp_manager,1,1,1,1
 
-access_sale_order_credit_payment,sale.order.credit.payment,model_sale_order_credit_payment,base.group_erp_manager,1,1,1,1
+access_sale_order_credit_payment,sale.order.credit.payment,model_sale_order_credit_payment,base.group_user,1,1,1,1
 
 access_affiliate,orbit.affiliate,model_orbit_affiliate,base.group_user,1,1,1,1
 
