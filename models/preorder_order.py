@@ -967,9 +967,10 @@ class Preorder(models.Model):
             if order.credit_payment_ids:
                 continue
 
+            total = order.amount_total or 1.0
             # Préparer les données d'échéance à migrer
             echeances = []
-            for index in ['first', 'second', 'third', 'fourth']:
+            for idx, index in enumerate(['first', 'second', 'third', 'fourth'], start=1):
                 date = getattr(order, f"{index}_payment_date", None)
                 amount = getattr(order, f"{index}_payment_amount", 0.0)
                 state = getattr(order, f"{index}_payment_state", None)
@@ -979,6 +980,9 @@ class Preorder(models.Model):
                         'due_date': date,
                         'amount': amount,
                         'state': True if state else False,
+                        'rate': round((amount / total) * 100.0, 2) ,
+                        'sequence': idx,
+                        
                     })
 
             # Créer les lignes si des données sont présentes
@@ -988,6 +992,8 @@ class Preorder(models.Model):
                     'due_date': line['due_date'],
                     'amount': line['amount'],
                     'state': line['state'],
+                    'rate': line['rate'],
+                    'sequence': line['sequence'],
                 })
 
 # ------------------------------------------ Modèle pour les paiements mensuels des commandes à crédit ----------------------
