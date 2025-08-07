@@ -71,7 +71,7 @@
                 
                 <xpath expr="//notebook/page[@name='order_lines']" position="after">
                     <!-- ############## Vue Fusionnée - Échéancier ############## -->
-                    <page string="Échéancier" priority="1"
+                    <page string="Échéancier" name="echeancier" priority="0"
                         attrs="{'invisible': [('type_sale', 'not in', ['preorder', 'creditorder'])]}">
                         <!-- Suivi des Paiements -->
                         <group string="Suivi Paiements">
@@ -120,7 +120,7 @@
                     </page>
 
                     <!-- ############## Partie Validations (Commande à crédit uniquement) ############## -->
-                    <page string="Validations" priority="2" attrs="{'invisible': [('type_sale', '!=', 'creditorder')]}">
+                    <page string="Validations" name="validations" priority="1" attrs="{'invisible': [('type_sale', '!=', 'creditorder')]}">
                         <group>
                             <group string="Responsable du client">
                                 <field name="validation_rh_state" string="Responsable du client" readonly="True"/>
