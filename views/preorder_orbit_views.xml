@@ -69,9 +69,9 @@
                     <attribute name="options">{'no_create': True}</attribute>
                 </xpath> -->
                 
-                <xpath expr="//notebook/page[@name='order_lines']" position="before">
+                <xpath expr="//notebook" position="inside">
                     <!-- ############## Vue Fusionnée - Échéancier ############## -->
-                    <page string="Échéancier" name="echeancier" priority="0"
+                    <page string="Échéancier" name="echeancier" priority="1"
                         attrs="{'invisible': [('type_sale', 'not in', ['preorder', 'creditorder'])]}">
                         <!-- Suivi des Paiements -->
                         <group string="Suivi Paiements">
@@ -97,7 +97,7 @@
                             </group>
                         </group>
                         <group string="Dates &amp; Montants échéances" >
-                            <field name="credit_payment_ids" readonly="1"
+                            <field name="credit_payment_ids" readonly="2"
                                 context="{'form_view_ref': 'orbit.view_sale_order_credit_payment_form', 'tree_view_ref': 'orbit.view_sale_order_credit_payment_tree'}"
                                 options="{'no_create': True, 'no_open': True}"
                                 domain="[('order_id', '=', id)]"
