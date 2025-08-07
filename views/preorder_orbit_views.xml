@@ -97,7 +97,7 @@
                             </group>
                         </group>
                         <group string="Dates &amp; Montants échéances" >
-                            <field name="credit_payment_ids" readonly="2"
+                            <field name="credit_payment_ids" readonly="1"
                                 context="{'form_view_ref': 'orbit.view_sale_order_credit_payment_form', 'tree_view_ref': 'orbit.view_sale_order_credit_payment_tree'}"
                                 options="{'no_create': True, 'no_open': True}"
                                 domain="[('order_id', '=', id)]"
