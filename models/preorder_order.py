@@ -976,7 +976,7 @@ class Preorder(models.Model):
 
                 if date and amount:
                     echeances.append({
-                        'payment_date': date,
+                        'due_date': date,
                         'amount': amount,
                         'state': True if state else False,
                     })
@@ -985,7 +985,7 @@ class Preorder(models.Model):
             for line in echeances:
                 self.env['sale.order.credit.payment'].create({
                     'order_id': order.id,
-                    'payment_date': line['payment_date'],
+                    'due_date': line['payment_date'],
                     'amount': line['amount'],
                     'state': line['state'],
                 })
