@@ -977,23 +977,23 @@ class Preorder(models.Model):
 
                 if date and amount:
                     echeances.append({
+                        'sequence': idx,
                         'due_date': date,
                         'amount': amount,
-                        'state': True if state else False,
+                        'state': bool(state),
                         'rate': round((amount / total) * 100.0, 2) ,
-                        'sequence': idx,
                         
                     })
 
             # Créer les lignes si des données sont présentes
             for line in echeances:
                 self.env['sale.order.credit.payment'].create({
+                    'sequence': line['sequence'],
                     'order_id': order.id,
                     'due_date': line['due_date'],
                     'amount': line['amount'],
                     'state': line['state'],
                     'rate': line['rate'],
-                    'sequence': line['sequence'],
                 })
 
 # ------------------------------------------ Modèle pour les paiements mensuels des commandes à crédit ----------------------
