@@ -985,7 +985,7 @@ class Preorder(models.Model):
             for line in echeances:
                 self.env['sale.order.credit.payment'].create({
                     'order_id': order.id,
-                    'due_date': line['payment_date'],
+                    'due_date': line['due_date'],
                     'amount': line['amount'],
                     'state': line['state'],
                 })
