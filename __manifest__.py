@@ -10,7 +10,12 @@
     'license': "AGPL-3",
     'website': "https://ccbme.sn",
     'category': 'CCBM/',
-    'version': '16.0.1.0',
+    'version': '16.0.1.0.1',
+    'application': True,
+    'installable': True,
+    'auto_install': False,
+    
+    
 
     # any module necessary for this one to work correctly
     'depends': ['base', 'product', 'sale', 'sale_crm','crm', 'account', 'purchase', 'stock', 'sale_stock', 'web'],
@@ -66,7 +71,7 @@
         # pour le back-office
         'web.assets_backend': [
             'orbit/static/src/js/custom_script.js',
-            'orbit/static/src/css/list_view_colors.css',
+            # 'orbit/static/src/css/list_view_colors.css',
         ],
         
         # pour le site web (frontend)
@@ -74,8 +79,5 @@
         #     'your_module/static/src/js/my_script.js',
         # ],
     },
-    'license': 'LGPL-3',
-    'application': True,
-    'installable': True,
-    'auto_install': False,
+    
 }
