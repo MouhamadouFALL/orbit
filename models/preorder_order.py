@@ -952,6 +952,43 @@ class Preorder(models.Model):
                 if not last_installment.is_amount_manual:
                     last_installment.amount += total_amount - installments_total
                     last_installment.is_amount_manual = True
+                                 
+    @api.model
+    def cron_migrate_echeances_to_credit_payments(self):
+        """
+        Cette tâche CRON parcourt toutes les commandes et crée les lignes d'échéances
+        à partir des champs first_payment_*, second_payment_*, etc.
+        Uniquement si aucune ligne credit_payment_ids n'existe déjà.
+        """
+        orders = self.search([])
+
+        for order in orders:
+            # Ne pas dupliquer si les lignes existent déjà
+            if order.credit_payment_ids:
+                continue
+
+            # Préparer les données d'échéance à migrer
+            echeances = []
+            for index in ['first', 'second', 'third', 'fourth']:
+                date = getattr(order, f"{index}_payment_date", None)
+                amount = getattr(order, f"{index}_payment_amount", 0.0)
+                state = getattr(order, f"{index}_payment_state", None)
+
+                if date and amount:
+                    echeances.append({
+                        'payment_date': date,
+                        'amount': amount,
+                        'state': True if state else False,
+                    })
+
+            # Créer les lignes si des données sont présentes
+            for line in echeances:
+                self.env['sale.order.credit.payment'].create({
+                    'order_id': order.id,
+                    'payment_date': line['payment_date'],
+                    'amount': line['amount'],
+                    'state': line['state'],
+                })
 
 # ------------------------------------------ Modèle pour les paiements mensuels des commandes à crédit ----------------------
 class SaleOrderPaymentInstallment(models.Model):
