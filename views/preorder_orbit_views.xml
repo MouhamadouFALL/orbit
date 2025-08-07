@@ -69,7 +69,7 @@
                     <attribute name="options">{'no_create': True}</attribute>
                 </xpath> -->
                 
-                <xpath expr="//notebook" position="inside">
+                <xpath expr="//sheet/notebook" position="inside">
                     <!-- ############## Vue Fusionnée - Échéancier ############## -->
                     <page string="Échéancier" name="echeancier" priority="1"
                         attrs="{'invisible': [('type_sale', 'not in', ['preorder', 'creditorder'])]}">
