@@ -126,7 +126,6 @@ class SaleOrder(models.Model):
                 raise UserError(_("Impossible de facturer avant livraison complète/partielle des produits !"))
         return super().action_invoice_create()
     
-    
 
     @api.depends('order_line.qty_delivered')
     def _compute_partial_delivery(self):

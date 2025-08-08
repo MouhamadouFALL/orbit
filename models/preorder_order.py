@@ -762,7 +762,7 @@ class Preorder(models.Model):
     #             # Recalculer les lignes automatiquement
     #             order._compute_credit_payment_duedate_data()
                 
-
+##########################################3 Debut ###############################################"
     @api.depends(
         'type_sale',
         'date_approved_creditorder',
@@ -777,118 +777,113 @@ class Preorder(models.Model):
                 order.credit_payment_ids = [(5, 0, 0)]
                 continue
 
-            # if order.is_credit_customer:
-            #     # En mode personnalisation, ne pas recalculer sauf cas spécial
-            #     month_count = order.creditorder_month_count
-            #     if not order.credit_month_rate or month_count < 1:
-            #         continue
-
-            #     try:
-            #         rates_raw = [float(rate.strip()) for rate in order.credit_month_rate.split(',')]
-            #     except ValueError:
-            #         continue
-
-            #     rates_list = []
-            #     provided_len = len(rates_raw)
-            #     sum_provided = sum(rates_raw)
-
-            #     if provided_len < month_count:
-            #         remaining = max(0.0, 100.0 - sum_provided)
-            #         remaining_slots = month_count - provided_len
-            #         if remaining_slots > 0:
-            #             equal_rate = round(remaining / remaining_slots, 2)
-            #             rates_list = rates_raw + [equal_rate] * remaining_slots
-            #             diff = round(100.0 - sum(rates_list), 2)
-            #             rates_list[-1] += diff
-            #         else:
-            #             rates_list = rates_raw
-            #     else:
-            #         rates_list = rates_raw[:month_count]
-
-            #     # Compléter si encore insuffisant
-            #     if len(rates_list) < month_count:
-            #         rates_list += [0.0] * (month_count - len(rates_list))
-
-            #     base_date = order.date_approved_creditorder or fields.Datetime.now()
-            #     commands = []
-
-            #     for i in range(month_count):
-            #         due_date = base_date + relativedelta(months=i)
-            #         commands.append((0, 0, {
-            #             'sequence': i + 1,
-            #             'due_date': due_date.date(),
-            #             'rate': rates_list[i],
-            #             'amount': 0.0,
-            #             'state': False
-            #         }))
-            #     order.credit_payment_ids = commands
-            #     continue  # pas de calcul de montant ici
-
-            # Mode automatique (is_credit_customer == False)
-            # Récupérer les lignes produits hors acompte
+            # Récupérer les données de base
             order_lines = order.order_line.filtered(lambda x: not x.is_downpayment)
             total_amount = sum(order_lines.mapped('price_total')) or 0.0
             month_count = order.creditorder_month_count
             base_date = order.date_approved_creditorder or fields.Datetime.now()
 
+            if month_count <= 0 or total_amount <= 0:
+                order.credit_payment_ids = [(5, 0, 0)]
+                continue
+
+            # Parsing des taux
             try:
-                rates_raw = [float(rate.strip()) for rate in order.credit_month_rate.split(',')]
-            except ValueError:
-                rates_raw = [100.0]  # fallback
+                rates_raw = [float(rate.strip()) for rate in order.credit_month_rate.split(',') if rate.strip()]
+            except (ValueError, AttributeError):
+                rates_raw = []
 
-            rates_list = []
-            provided_len = len(rates_raw)
-            sum_provided = sum(rates_raw)
+            # Préparation de la liste des taux
+            rates_list = self._prepare_rates_list(rates_raw, month_count)
 
-            if provided_len < month_count:
-                remaining = max(0.0, 100.0 - sum_provided)
-                remaining_slots = month_count - provided_len
-                if remaining_slots > 0:
-                    equal_rate = round(remaining / remaining_slots, 2)
-                    rates_list = rates_raw + [equal_rate] * remaining_slots
-                    diff = round(100.0 - sum(rates_list), 2)
-                    rates_list[-1] += diff
-                else:
-                    rates_list = rates_raw
-            else:
-                rates_list = rates_raw[:month_count]
-
-            if len(rates_list) < month_count:
-                rates_list += [0.0] * (month_count - len(rates_list))
-
-            # Réutiliser les échéances existantes
+            # Traitement des échéances existantes
             existing_installments = {inst.sequence: inst for inst in order.credit_payment_ids}
-            total_rate = 0.0
-            manual_amounts = 0.0
+
+            # Séparation des échéances manuelles et automatiques
+            manual_installments = {}
+            auto_installments = {}
+            manual_total_amount = 0.0
+            auto_total_rate = 0.0
 
             for month in range(1, month_count + 1):
                 rate = rates_list[month - 1]
-                if month in existing_installments and existing_installments[month].is_amount_manual:
-                    manual_amounts += existing_installments[month].amount
-                else:
-                    total_rate += rate
+                existing_inst = existing_installments.get(month)
 
-            remaining_amount = total_amount - manual_amounts
+                if existing_inst and existing_inst.is_amount_manual:
+                    manual_installments[month] = existing_inst
+                    manual_total_amount += existing_inst.amount
+                else:
+                    auto_installments[month] = existing_inst
+                    auto_total_rate += rate
+
+            # Montant disponible pour les échéances automatiques
+            remaining_amount_for_auto = max(0.0, total_amount - manual_total_amount)
+
+            # Génération des commandes
             commands = []
+            auto_amounts = {}  # Pour stocker les montants calculés automatiquement
 
             for month in range(1, month_count + 1):
-                due_date = base_date + relativedelta(months=month - 1)
+                due_date = (base_date + relativedelta(months=month - 1)).date()
                 rate = rates_list[month - 1]
-                if month in existing_installments:
-                    inst = existing_installments[month]
-                    update_vals = {'due_date': due_date.date(), 'rate': rate}
-                    if not inst.is_amount_manual:
-                        update_vals['amount'] = remaining_amount * (rate / total_rate) if total_rate else 0.0
-                    commands.append((1, inst.id, update_vals))
-                else:
-                    installment_amount = remaining_amount * (rate / total_rate) if total_rate else 0.0
-                    commands.append((0, 0, {
-                        'sequence': month,
-                        'due_date': due_date.date(),
-                        'rate': rate,
-                        'amount': installment_amount,
-                        'state': False
+                existing_inst = existing_installments.get(month)
+
+                if month in manual_installments:
+                    # Échéance manuelle - ne modifier que la date et le taux d'affichage
+                    commands.append((1, existing_inst.id, {
+                        'due_date': due_date,
+                        'rate': rate,  # Taux d'affichage seulement
                     }))
+                else:
+                    # Échéance automatique
+                    if auto_total_rate > 0:
+                        installment_amount = round((remaining_amount_for_auto * rate) / auto_total_rate, 2)
+                    else:
+                        installment_amount = 0.0
+
+                    auto_amounts[month] = installment_amount
+
+                    if existing_inst:
+                        commands.append((1, existing_inst.id, {
+                            'due_date': due_date,
+                            'rate': rate,
+                            'amount': installment_amount,
+                            'is_amount_manual': False,
+                        }))
+                    else:
+                        commands.append((0, 0, {
+                            'sequence': month,
+                            'due_date': due_date,
+                            'rate': rate,
+                            'amount': installment_amount,
+                            'state': False,
+                            'is_amount_manual': False,
+                        }))
+
+            # Ajustement des arrondis UNIQUEMENT sur les échéances automatiques
+            if auto_amounts:
+                calculated_auto_total = sum(auto_amounts.values())
+                diff = remaining_amount_for_auto - calculated_auto_total
+
+                if abs(diff) > 0.01:  # Seuil de tolérance pour les arrondis
+                    # Trouver la dernière échéance automatique avec le plus gros montant
+                    last_auto_month = max(auto_amounts.keys(),
+                                          key=lambda x: (auto_amounts[x], x))
+
+                    # Appliquer la correction
+                    auto_amounts[last_auto_month] += diff
+
+                    # Mettre à jour la commande correspondante
+                    for idx, cmd in enumerate(commands):
+                        if ((cmd[0] == 1 and existing_installments.get(cmd[1]) and
+                             existing_installments[cmd[1]].sequence == last_auto_month) or
+                                (cmd[0] == 0 and cmd[2]['sequence'] == last_auto_month)):
+
+                            if cmd[0] == 1:
+                                cmd[2]['amount'] = auto_amounts[last_auto_month]
+                            else:
+                                cmd[2]['amount'] = auto_amounts[last_auto_month]
+                            break
 
             # Supprimer les échéances excédentaires
             valid_sequences = set(range(1, month_count + 1))
@@ -896,43 +891,108 @@ class Preorder(models.Model):
                 if seq not in valid_sequences:
                     commands.append((2, inst.id, 0))
 
-            # Ajustement final pour corriger les arrondis
-            amounts_sum = 0.0
-            for cmd in commands:
-                if cmd[0] == 0:
-                    amounts_sum += cmd[2].get('amount', 0.0)
-                elif cmd[0] == 1:
-                    inst = existing_installments.get(cmd[1])
-                    if inst:
-                        if inst.is_amount_manual:
-                            amounts_sum += inst.amount
-                        else:
-                            amounts_sum += cmd[2].get('amount', inst.amount)
-
-            diff = total_amount - (amounts_sum + manual_amounts)
-            if abs(diff) > 0.01:
-                # Trouver la dernière échéance non manuelle
-                last_seq = None
-                for month in range(month_count, 0, -1):
-                    if month in existing_installments:
-                        if not existing_installments[month].is_amount_manual:
-                            last_seq = month
-                            break
-                    else:
-                        last_seq = month
-                        break
-                if last_seq:
-                    for idx, cmd in enumerate(commands):
-                        if (cmd[0] == 1 and existing_installments.get(cmd[1]) and existing_installments[cmd[1]].sequence == last_seq) \
-                        or (cmd[0] == 0 and cmd[2]['sequence'] == last_seq):
-                            if cmd[0] == 1:
-                                cmd[2]['amount'] += diff
-                            else:
-                                cmd[2]['amount'] += diff
-                            break
-
             order.credit_payment_ids = commands
 
+    def _prepare_rates_list(self, rates_raw, month_count):
+        """
+        Prépare la liste des taux en gérant les cas où il y a moins ou plus de taux que de mois
+        """
+        if not rates_raw:
+            # Répartition égale si aucun taux spécifié
+            equal_rate = round(100.0 / month_count, 2)
+            rates_list = [equal_rate] * month_count
+            # Ajustement pour que la somme soit exactement 100%
+            diff = round(100.0 - sum(rates_list), 2)
+            rates_list[-1] += diff
+            return rates_list
+
+        provided_len = len(rates_raw)
+        sum_provided = sum(rates_raw)
+
+        if provided_len == month_count:
+            # Nombre exact de taux fournis
+            total_rate = sum(rates_raw)
+            if abs(total_rate - 100.0) > 0.01:
+                # Normaliser pour que la somme soit 100%
+                factor = 100.0 / total_rate if total_rate > 0 else 1.0
+                rates_list = [round(rate * factor, 2) for rate in rates_raw]
+                # Ajustement final des arrondis
+                diff = round(100.0 - sum(rates_list), 2)
+                rates_list[-1] += diff
+            else:
+                rates_list = rates_raw[:]
+        elif provided_len < month_count:
+            # Moins de taux que de mois - compléter
+            remaining = max(0.0, 100.0 - sum_provided)
+            remaining_slots = month_count - provided_len
+
+            if remaining_slots > 0 and remaining > 0:
+                equal_rate = round(remaining / remaining_slots, 2)
+                rates_list = rates_raw + [equal_rate] * remaining_slots
+                # Ajustement pour les arrondis
+                diff = round(100.0 - sum(rates_list), 2)
+                if rates_list:
+                    rates_list[-1] += diff
+            else:
+                rates_list = rates_raw + [0.0] * remaining_slots
+        else:
+            # Plus de taux que de mois - tronquer et normaliser
+            rates_list = rates_raw[:month_count]
+            total_rate = sum(rates_list)
+            if total_rate > 0:
+                factor = 100.0 / total_rate
+                rates_list = [round(rate * factor, 2) for rate in rates_list]
+                # Ajustement final
+                diff = round(100.0 - sum(rates_list), 2)
+                rates_list[-1] += diff
+
+        # Vérification finale et nettoyage
+        if len(rates_list) < month_count:
+            rates_list += [0.0] * (month_count - len(rates_list))
+        elif len(rates_list) > month_count:
+            rates_list = rates_list[:month_count]
+
+        return rates_list
+
+    @api.model
+    def _validate_installments_integrity(self, order):
+        """
+        Méthode de validation pour vérifier l'intégrité des échéances
+        """
+        if order.type_sale != 'creditorder':
+            return True
+
+        installments = order.credit_payment_ids
+        if not installments:
+            return True
+
+        # Vérifications
+        total_amount = sum(order.order_line.filtered(lambda x: not x.is_downpayment).mapped('price_total'))
+        installments_total = sum(installments.mapped('amount'))
+
+        # Tolérance de 1 centime pour les arrondis
+        if abs(total_amount - installments_total) > 0.01:
+            _logger.warning(
+                f"Commande {order.name}: Écart détecté entre total commande ({total_amount}) "
+                f"et total échéances ({installments_total})"
+            )
+            return False
+
+        # Vérifier la cohérence des taux pour les échéances non manuelles
+        auto_installments = installments.filtered(lambda x: not x.is_amount_manual)
+        if auto_installments:
+            manual_amount = sum(installments.filtered(lambda x: x.is_amount_manual).mapped('amount'))
+            remaining_amount = total_amount - manual_amount
+            auto_total = sum(auto_installments.mapped('amount'))
+
+            if abs(remaining_amount - auto_total) > 0.01:
+                _logger.warning(
+                    f"Commande {order.name}: Incohérence dans les échéances automatiques"
+                )
+                return False
+
+        return True
+############################################################### FIN ##############################################33
     @api.onchange('credit_payment_ids', 'order_line')
     def _onchange_installments(self):
         for order in self:
@@ -968,6 +1028,8 @@ class Preorder(models.Model):
                 continue
 
             total = order.amount_total or 1.0
+            order.credit_month_rate = getattr(order, 'credit_month_rate', '50,20,15,15')
+            order.creditorder_month_count = getattr(order, 'creditorder_month_count', 4)
             # Préparer les données d'échéance à migrer
             echeances = []
             for idx, index in enumerate(['first', 'second', 'third', 'fourth'], start=1):
@@ -989,35 +1051,26 @@ class Preorder(models.Model):
                     continue  # Ne pas créer de doublon
                 
                 # Créer la ligne
-                self.env['sale.order.credit.payment'].create({
-                    'order_id': order.id,
-                    'sequence': idx,
-                    'due_date': date,
-                    'amount': amount,
-                    'state': bool(state),
-                    'rate': round((amount / total) * 100.0, 2),
-                })
-
-                # if date and amount:
-                #     echeances.append({
-                #         'sequence': idx,
-                #         'due_date': date,
-                #         'amount': amount,
-                #         'state': bool(state),
-                #         'rate': round((amount / total) * 100.0, 2) ,
+                if date and amount:
+                    echeances.append({
+                        'sequence': idx,
+                        'due_date': date,
+                        'amount': amount,
+                        'state': bool(state),
+                        'rate': round((amount / total) * 100.0, 2) ,
                         
-                #     })
-
-                # Créer les lignes si des données sont présentes
-                # for line in echeances:
-                #     self.env['sale.order.credit.payment'].create({
-                #         'sequence': line['sequence'],
-                #         'order_id': order.id,
-                #         'due_date': line['due_date'],
-                #         'amount': line['amount'],
-                #         'state': line['state'],
-                #         'rate': line['rate'],
-                #     })
+                    })
+            
+            # Créer les lignes si des données sont présentes
+            for line in echeances:
+                self.env['sale.order.credit.payment'].create({
+                    'sequence': line['sequence'],
+                    'order_id': order.id,
+                    'due_date': line['due_date'],
+                    'amount': line['amount'],
+                    'state': line['state'],
+                    'rate': line['rate'],
+                })
 
 # ------------------------------------------ Modèle pour les paiements mensuels des commandes à crédit ----------------------
 class SaleOrderPaymentInstallment(models.Model):
@@ -1039,9 +1092,7 @@ class SaleOrderPaymentInstallment(models.Model):
     
     currency_id = fields.Many2one(related='order_id.currency_id', string="Devise", readonly=True, store=True)
     paid_amount = fields.Monetary(string="Montant payé", compute='compute_paid_amount_and_state', store=True)
-    # is_paid = fields.Boolean(string="Payée ?", compute='_compute_paid_amount', store=True)
-    
-    
+
     @api.onchange('order_id')
     def _onchange_order_id_currency(self):
         for rec in self:
@@ -1117,4 +1168,7 @@ class SaleOrderPaymentInstallment(models.Model):
             if total:
                 rec.rate = round((rec.amount / total) * 100.0, 2)
                 rec.is_amount_manual = True
+
+
+
                 
