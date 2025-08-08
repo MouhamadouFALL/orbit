@@ -762,7 +762,7 @@ class Preorder(models.Model):
     #             # Recalculer les lignes automatiquement
     #             order._compute_credit_payment_duedate_data()
                 
-##########################################3 Debut ###############################################"
+########################################## Debut ###############################################"
     @api.depends(
         'type_sale',
         'date_approved_creditorder',
@@ -992,26 +992,8 @@ class Preorder(models.Model):
                 return False
 
         return True
+
 ############################################################### FIN ##############################################33
-    @api.onchange('credit_payment_ids', 'order_line')
-    def _onchange_installments(self):
-        for order in self:
-            if order.type_sale != 'creditorder' or not order.credit_payment_ids:
-                return
-                
-            # Calculer le total
-            order_lines = order.order_line.filtered(lambda x: not x.is_downpayment)
-            total_amount = sum(order_lines.mapped('price_total')) or 0.0
-            
-            # Calculer la somme des échéances
-            installments_total = sum(order.credit_payment_ids.mapped('amount'))
-            
-            # Ajuster la dernière échéance si différence
-            if abs(total_amount - installments_total) > 0.01:
-                last_installment = max(order.credit_payment_ids, key=lambda x: x.sequence)
-                if not last_installment.is_amount_manual:
-                    last_installment.amount += total_amount - installments_total
-                    last_installment.is_amount_manual = True
                                  
     @api.model
     def cron_migrate_echeances_to_credit_payments(self):

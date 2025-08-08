@@ -5,11 +5,12 @@
         <field name="arch" type="xml">
             <tree editable="bottom">
                 <field name="sequence"/>
+                <field name="order_id"/>
                 <field name="due_date"/>
                 <field name="rate"/>
                 <field name="amount"/>
-                <field name="is_amount_manual"/>
                 <field name="state"/>
+                <field name="is_amount_manual" optional="hide"/>
             </tree>
         </field>
     </record>
@@ -21,18 +22,35 @@
             <form>
                 <sheet>
                     <group>
-                        <field name="sequence"/>
-                        <field name="due_date"/>
-                        <field name="rate"/>
-                        <field name="amount"/>
-                        <field name="is_amount_manual"/>
-                        <field name="state" readonly="1"/>
+                        <group>
+                            <field name="order_id"/>
+                            <field name="sequence" />
+                            <field name="due_date"/>
+                            <field name="rate"/>
+                        </group>
+                        <group>
+                            <field name="amount"/>
+                            <field name="is_amount_manual" readonly="1"/>
+                            <field name="state" readonly="1"/>
+                        </group>
                     </group>
                 </sheet>
             </form>
         </field>
     </record>
 
+    <record id="serach_sale_order_credit_payment_filter" model="ir.ui.view">
+            <field name="name">sale.order.credit.payment.filter</field>
+            <field name="model">sale.order.credit.payment</field>
+            <field name="priority" eval="15"/>
+            <field name="arch" type="xml">
+                <search string="Search Echeance">
+                    <field name="amount"/>
+                    <field name="order_id"/>
+                    <field name="due_date" />
+                </search>
+            </field>
+    </record>
     <!-- Action pour tester ou isoler la vue -->
     <record id="action_sale_order_credit_payment" model="ir.actions.act_window">
         <field name="name">Échéances de Paiement Crédit</field>
