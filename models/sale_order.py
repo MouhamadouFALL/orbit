@@ -110,49 +110,14 @@ class SaleOrder(models.Model):
             if 'type_sale' not in vals and 'default_type_sale' in self.env.context:
                 vals['type_sale'] = self.env.context['default_type_sale']
 
-        """Override avec vérification du paramètre système"""
-        # Vérifier si les API sont désactivées
-        api_enabled = self.env['ir.config_parameter'].sudo().get_param(
-            'your_module.api_enabled', 'True'
-        ).lower() == 'true'
+        SKIP_API = True  # Changez en False pour réactiver
 
-        if not api_enabled:
-            # Mode dégradé : créer sans appels API
-            # return self._create_without_api(vals)
-            return super(SaleOrder, self)._create_without_api(vals)
-
-        try:
-            # Logique normale avec API
-            #return self._create_with_api(vals)
-            return super(SaleOrder, self)._create_with_api(vals)
-        except Exception as e:
-            # Fallback en cas d'erreur API
-            _logger.error(f"Erreur API lors création commande: {e}")
-            #return self._create_without_api(vals)
-            return super(SaleOrder, self)._create_without_api(vals)
-
+        if SKIP_API:
+            _logger.info("API temporairement désactivées")
+            return super(SaleOrder, self).create(vals_list)
         # return super(SaleOrder, self).create(vals_list)
 
 
-    @api.model
-    def create(self, vals):
-        """Override avec vérification du paramètre système"""
-        # Vérifier si les API sont désactivées
-        api_enabled = self.env['ir.config_parameter'].sudo().get_param(
-            'your_module.api_enabled', 'True'
-        ).lower() == 'true'
-
-        if not api_enabled:
-            # Mode dégradé : créer sans appels API
-            return self._create_without_api(vals)
-
-        try:
-            # Logique normale avec API
-            return self._create_with_api(vals)
-        except Exception as e:
-            # Fallback en cas d'erreur API
-            _logger.error(f"Erreur API lors création commande: {e}")
-            return self._create_without_api(vals)
 
     @api.depends("amount_residual")
     def action_delivered(self):
