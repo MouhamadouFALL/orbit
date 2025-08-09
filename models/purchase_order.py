@@ -1,4 +1,4 @@
-#-*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 from odoo import models, fields, api, _, exceptions
 from odoo.exceptions import ValidationError, UserError
 from datetime import datetime, timedelta
@@ -10,269 +10,413 @@ _logger = logging.getLogger(__name__)
 class PurchaseOrder(models.Model):
     _inherit = "purchase.order"
 
-    attachment_ids = fields.Many2many('ir.attachment', 'orbit_attachment_rel', 'orbit_id', 'attachment_id', string="Pieces jointes", store=True, help="Attach files related to this order")
-    # Ajout de champs pour la gestion de la validation
-    # 'usr_confirmed' est l'utilisateur qui a confirmé le bon de commande
-    # 'date_approve' est la date de confirmation
-    usr_confirmed = fields.Many2one('res.users', string="Confirmé par", readonly=True)
-    
+    # ==================== CHAMPS ====================
+
+    attachment_ids = fields.Many2many(
+        'ir.attachment',
+        'orbit_purchase_attachment_rel',  # Table de relation renommée pour éviter les conflits
+        'purchase_id',
+        'attachment_id',
+        string="Pièces jointes",
+        help="Fichiers joints à ce bon de commande"
+    )
+
+    usr_confirmed = fields.Many2one(
+        'res.users',
+        string="Confirmé par",
+        readonly=True,
+        tracking=True,
+        help="Utilisateur qui a confirmé le bon de commande"
+    )
+
     payment_count = fields.Integer(
         string='Nombre de paiements',
         compute='_compute_payments',
-        store=True)
+        store=True,
+        help="Nombre de paiements liés à ce bon de commande"
+    )
+
     payment_total = fields.Monetary(
         string='Total versé',
         compute='_compute_payments',
         store=True,
-        currency_field='currency_id')
-    
-    # Ajout de l'état de validation dans le modèle de bon de commande
-    # 'to_validate' est un état personnalisé pour la validation
-    # state = fields.Selection(selection_add=[('to_validate', 'Validation')],
-    #     string='Status', readonly=True, index=True, copy=False, tracking=True,)
+        currency_field='currency_id',
+        help="Montant total des paiements effectués"
+    )
+
+    # État de validation personnalisé
     state = fields.Selection([
-        ('draft', 'RFQ'),
-        ('sent', 'RFQ Sent'),
-        ('to_validate', 'Validation'),
-        ('to approve', 'To Approve'),
+        ('draft', 'Demande de Prix'),
+        ('sent', 'DDP Envoyée'),
+        ('to_validate', 'En Validation'),
+        ('to_approve', 'À Approuver'),
         ('purchase', 'Bon de Commande'),
-        ('done', 'Locked'),
-        ('cancel', 'Cancelled')
-    ], string='Status', readonly=True, index=True, copy=False, default='draft', tracking=True)
-    
-    # last_reminder_date = fields.Datetime(string="Dernier rappel envoyé")
-    
-    # Gestion de demande de validation du bon de commande 
-    # Cette méthode est appelée pour envoyer un email de validation
-    # aux utilisateurs du groupe 'orbit.ccbmshop_purchase_group_manager'
-    # et changer l'état du bon de commande à 'to_validate'
+        ('done', 'Verrouillé'),
+        ('cancel', 'Annulé')
+    ], string='Statut', readonly=True, index=True, copy=False,
+        default='draft', tracking=True)
+
+    # ==================== MÉTHODES DE VALIDATION ====================
+
     def action_to_validation(self):
-        """Envoie une demande de validation pour le bon de commande sélectionné."""
-        
-        _logger.info(f" ++++++++++++++++ >>>>>>>>>>>>>>>>>>>>>>>>>> :::>>> {self.env['ir.config_parameter'].sudo().get_param('web.base.urls')}")
-        
+        """Envoie une demande de validation pour le bon de commande."""
+        self.ensure_one()
+
+        if self.state != 'draft':
+            raise UserError(_("Seuls les bons de commande en brouillon peuvent être envoyés en validation."))
+
+        # Vérifications préalables
+        self._check_validation_requirements()
+
         self.write({'state': 'to_validate'})
-        # recuperer le modèle d'email de validation
-        template = self.env.ref('orbit.email_template_purchase_order_validation', raise_if_not_found=False)
-        # recupérer le dictionnaire des emails 
-        email_values = self.get_mails_usrs_from_group_usrs()
-        
-        for order in self:
-            # Envoi de l'email de validation
-            template.send_mail(order.id, force_send=True, raise_exception=False, email_values=email_values)
-            _logger.info(f"Demande de validation envoyée pour le bon de commande {order.name}")
-            _logger.info(f" ++++++++++++++++ >>>>>>>>>>>>>>>>>>>>>>>>>> :::>>> {self.env['ir.config_parameter'].sudo().get_param('web.base.urls')}")
-            
-            
-    # Cette méthode est appelée pour envoyer un email de validation
-    # aux utilisateurs du groupe 'orbit.ccbmshop_purchase_group_manager'
+
+        # Récupération du template d'email
+        template = self.env.ref(
+            'orbit.email_template_purchase_order_validation',
+            raise_if_not_found=False
+        )
+
+        if not template:
+            _logger.warning("Template d'email de validation introuvable")
+            return
+
+        # Récupération des emails des managers
+        email_values = self._get_manager_emails()
+
+        if email_values.get('email_to'):
+            try:
+                template.send_mail(
+                    self.id,
+                    force_send=True,
+                    raise_exception=False,
+                    email_values=email_values
+                )
+                _logger.info(f"Demande de validation envoyée pour {self.name}")
+
+                # Message de suivi interne
+                self.message_post(
+                    body=_("Demande de validation envoyée aux managers d'achat."),
+                    message_type='notification',
+                    subtype_xmlid='mail.mt_note'
+                )
+            except Exception as e:
+                _logger.error(f"Erreur envoi email validation {self.name}: {e}")
+                raise UserError(_("Erreur lors de l'envoi de la demande de validation."))
+        else:
+            raise UserError(_("Aucun manager d'achat configuré pour recevoir les validations."))
+
+    def _check_validation_requirements(self):
+        """Vérifie les prérequis pour la validation."""
+        if not self.order_line:
+            raise UserError(_("Impossible de valider un bon de commande sans lignes."))
+
+        if not self.partner_id:
+            raise UserError(_("Veuillez sélectionner un fournisseur."))
+
+        # Vérification des montants
+        if any(line.price_unit <= 0 for line in self.order_line):
+            raise UserError(_("Toutes les lignes doivent avoir un prix unitaire positif."))
+
     @api.model
     def send_validation_reminders(self):
-        """Envoie des rappels de validation pour tous les bons d'achat en attente de validation."""
-        
-        template = self.env.ref('orbit.email_template_purchase_order_validation', raise_if_not_found=False)
-        if not template:
-            return
-        
-        # threshold_time = datetime.now() - timedelta(minutes=2)
-        purchase_orders = self.search([('state', '=', 'to_validate')])
-        email_values = self.get_mails_usrs_from_group_usrs()
-        for order in purchase_orders:
-            # if not order.last_reminder_date or order.last_reminder_date < threshold_time:
-            template.send_mail(order.id, force_send=False, raise_exception=False, email_values=email_values)
-            _logger.info(f"++++++++++++++++++++++++ :::::::::::::: >>>>>>>>>>>>>>>>>>> Rappel de validation envoyé pour le bon de commande {order.name}")
-            # order.last_reminder_date = fields.Datetime.now()
-    
-    # cette méthode est appelée pour renvoyer la liste des emails des utilisateurs du groupe Manager d'achat
-    # et les ajouter dans un set pour éviter les doublons
-    # elle est utilisée dans la méthode action_to_validation et send_validation_reminders
-    def get_mails_usrs_from_group_usrs(self):
+        """Envoie des rappels de validation via cron job."""
+        template = self.env.ref(
+            'orbit.email_template_purchase_order_validation',
+            raise_if_not_found=False
+        )
 
-        email_recipients = set()
-        
-        group = self.env.ref('orbit.ccbmshop_purchase_group_manager')
-        # usr_ids = self.env['res.users'].search([('groups_id', 'in', [group.id])])
-        # email_recipients.update([usr.email for usr in usr_ids if usr.email])
-        
-        email_recipients = self.env['res.users'].search([('groups_id', 'in', [group.id]), ('email', '!=', False)]).mapped('email')
-            
-        email_values = {
-                'email_to': ','.join(email_recipients),
-                # 'email_from': self.env.user.email or 'ccbmshop@ccbmtechnologies.com',
-                'email_from': 'shop@ccbm.sn',
+        if not template:
+            _logger.warning("Template de rappel introuvable")
+            return
+
+        # Recherche des bons de commande en attente de validation
+        purchase_orders = self.search([('state', '=', 'to_validate')])
+
+        if not purchase_orders:
+            return
+
+        email_values = self._get_manager_emails()
+
+        for order in purchase_orders:
+            try:
+                template.send_mail(
+                    order.id,
+                    force_send=False,
+                    raise_exception=False,
+                    email_values=email_values
+                )
+                _logger.info(f"Rappel de validation envoyé pour {order.name}")
+            except Exception as e:
+                _logger.error(f"Erreur rappel validation {order.name}: {e}")
+
+    def _get_manager_emails(self):
+        """Récupère les emails des managers d'achat."""
+        try:
+            group = self.env.ref('orbit.ccbmshop_purchase_group_manager')
+
+            # Recherche optimisée des utilisateurs actifs avec email
+            managers = self.env['res.users'].search([
+                ('groups_id', 'in', [group.id]),
+                ('email', '!=', False),
+                ('active', '=', True)
+            ])
+
+            emails = [user.email for user in managers if user.email]
+
+            if not emails:
+                _logger.warning("Aucun manager d'achat avec email configuré")
+                return {}
+
+            return {
+                'email_to': ','.join(set(emails)),  # Suppression des doublons
+                'email_from': self.env.company.email or 'shop@ccbm.sn',
             }
-        
-        return email_values
-            
-    
+
+        except Exception as e:
+            _logger.error(f"Erreur récupération emails managers: {e}")
+            return {}
+
+    # ==================== GESTION DES PAIEMENTS ====================
+
     def _get_valid_payments(self):
-        """Retourne les paiements fournisseurs postés réconciliés avec ce bon d'achat."""
+        """Retourne les paiements valides liés à ce bon d'achat."""
         self.ensure_one()
-        # On cherche soit sur les factures liées, soit sur la référence du PO
-        # invoice_refs = self.invoice_ids.mapped('name')
-        # domain = [
-        #     ('state', '=', 'posted'),
-        #     ('is_internal_transfer', '=', False),
-        #     '|',
-        #     ('invoice_ids', 'in', self.invoice_ids.ids),
-        #     ('ref', 'in', invoice_refs + [self.name]),
-        # ]
-        # return self.env['account.payment'].search(domain, order='date desc')
-        
-        payments = self.env['account.payment']  # Recordset vide initial
-        # On ne traite que les factures fournisseur publiées
-        for inv in self.invoice_ids.filtered(lambda i: i.state == 'posted' and i.is_invoice()):
-            # Pour chaque ligne de la facture, on parcourt les réconciliations
-            for line in inv.line_ids:
-                recs = line.matched_debit_ids | line.matched_credit_ids
-                for rec in recs:
-                    # Chaque reconciliation référence deux lignes : debit_move_id et credit_move_id
-                    for move_line in (rec.debit_move_id, rec.credit_move_id):
-                        if move_line.payment_id:
+
+        if not self.invoice_ids:
+            return self.env['account.payment']
+
+        payments = self.env['account.payment']
+
+        # Recherche dans les factures validées
+        posted_invoices = self.invoice_ids.filtered(
+            lambda inv: inv.state == 'posted' and inv.move_type == 'in_invoice'
+        )
+
+        for invoice in posted_invoices:
+            # Recherche des paiements via les lignes réconciliées
+            receivable_lines = invoice.line_ids.filtered(
+                lambda line: line.account_id.account_type in ('asset_receivable', 'liability_payable')
+            )
+
+            for line in receivable_lines:
+                # Paiements via matched_debit_ids et matched_credit_ids
+                for matched in (line.matched_debit_ids | line.matched_credit_ids):
+                    move_lines = [matched.debit_move_id, matched.credit_move_id]
+                    for move_line in move_lines:
+                        if (move_line.payment_id and
+                                move_line.payment_id.state == 'posted' and
+                                not move_line.payment_id.is_internal_transfer):
                             payments |= move_line.payment_id
 
-        # Ne garder que les paiements effectivement postés et non‐internes
-        return payments.filtered(lambda p: p.state == 'posted' and not p.is_internal_transfer)
-    
-    @api.depends('invoice_ids.state', 'invoice_ids.line_ids.matched_debit_ids.credit_move_id.payment_id.state')
-    def _compute_payments(self):
-        for order in self:
-            payments = order._get_valid_payments()
-            # On ne prend que les factures publiées ou payées
-            # invoices = order.invoice_ids.filtered(lambda inv: inv.state in ('posted', 'paid'))
-            # for inv in invoices:
-            #     # Récupère les paiements via la réconciliation des lignes de mouvement
-            #     pm = inv.line_ids \
-            #             .mapped('matched_debit_ids') \
-            #             .mapped('credit_move_id') \
-            #             .mapped('payment_id')
-            #     payments |= pm
-            order.payment_count = len(payments)
-            order.payment_total = sum(payments.mapped('amount'))
-            
-    def action_view_payments(self):
-        self.ensure_one()
-        # Recherche des paiements déjà identifiés
-        # payments = self.env['account.payment'].search([
-        #     ('id', 'in', self.invoice_ids
-        #                     .mapped('line_ids')
-        #                     .mapped('matched_debit_ids')
-        #                     .mapped('credit_move_id')
-        #                     .mapped('payment_id')
-        #                     .ids)
-        # ])
-        # return {
-        #     'name': 'Paiements fournisseur',
-        #     'view_mode': 'tree,form',
-        #     'res_model': 'account.payment',
-        #     'domain': [('id', 'in', payments.ids)],
-        #     'type': 'ir.actions.act_window',
-        # }
-        
-        payments = self._get_valid_payments()
-        if not payments:
-            raise UserError(_("Aucun paiement trouvé pour ce bon d'achat"))
+        return payments.sudo()  # Accès en mode sudo pour éviter les restrictions
 
-        action = self.env.ref('account.action_account_payments').read()[0]
-        action.update({
-            'domain': [('id', 'in', payments.ids)],
-            'context': {
-                'default_partner_id': self.partner_id.id,
-                'default_ref': self.name,
-                'default_date': fields.Date.context_today(self),
-                'search_default_group_by_payment_type': True,
-            },
-            'views': [(False, 'tree'), (False, 'form')],
-        })
+    @api.depends('invoice_ids.state', 'invoice_ids.payment_state')
+    def _compute_payments(self):
+        """Calcul des statistiques de paiement."""
+        for order in self:
+            try:
+                payments = order._get_valid_payments()
+                order.payment_count = len(payments)
+                order.payment_total = sum(payments.mapped('amount')) if payments else 0.0
+            except Exception as e:
+                _logger.warning(f"Erreur calcul paiements {order.name}: {e}")
+                order.payment_count = 0
+                order.payment_total = 0.0
+
+    def action_view_payments(self):
+        """Ouvre la vue des paiements liés."""
+        self.ensure_one()
+
+        payments = self._get_valid_payments()
+
+        if not payments:
+            raise UserError(_("Aucun paiement trouvé pour ce bon d'achat."))
+
+        action = self.env.ref('account.action_account_payments_payable').read()[0]
+
+        if len(payments) == 1:
+            action.update({
+                'views': [(False, 'form')],
+                'res_id': payments.id,
+                'domain': [],
+                'context': {},
+            })
+        else:
+            action.update({
+                'domain': [('id', 'in', payments.ids)],
+                'context': {
+                    'default_partner_id': self.partner_id.id,
+                    'default_ref': self.name,
+                },
+            })
+
         return action
 
+    # ==================== GESTION DES MODIFICATIONS ====================
+
     def write(self, vals):
-        # Autoriser les opérations système et pièces jointes
-        system_context = self.env.context.get('tracking_disable') or self._context.get('bypass_purchase_lock')
-        if system_context or self.env.user.has_group('base.ccbmshop_purchase_group_manager'):
+        """Contrôle des modifications sur les bons de commande confirmés."""
+
+        # Contextes d'autorisation système
+        system_contexts = [
+            'tracking_disable',
+            'bypass_purchase_lock',
+            'mail_activity_automation_skip',
+            'mail_notrack'
+        ]
+
+        if any(self.env.context.get(ctx) for ctx in system_contexts):
             return super().write(vals)
-        
-        # Autoriser spécifiquement l'annulation
-        if vals.get('state') in ['draft', 'to approve', 'sent', 'cancel']:
+
+        # Autorisation pour les managers
+        if self.env.user.has_group('orbit.ccbmshop_purchase_group_manager'):
             return super().write(vals)
-        
-        # Vérifier si la restriction doit être appliquée
-        if not self.env.context.get('bypass_purchase_lock'):
-            for order in self.filtered(lambda o: o.state in ['purchase', 'done']):
-                # Whitelist étendue avec champs techniques nécessaires
-                allowed_fields = self._get_whitelisted_fields()
-                if not set(vals.keys()).issubset(allowed_fields):
-                    _logger.warning(f"Tentative de modification non autorisée par {self.env.user.name} sur {order.name}")
-                    raise UserError(_("Modification non autorisée sur le bon de commande %s confirmé ! (État: %s).") % (order.name, order.state))
-        
+
+        # États où les modifications sont toujours autorisées
+        if vals.get('state') in ['draft', 'sent', 'to_validate', 'to_approve', 'cancel']:
+            return super().write(vals)
+
+        # Contrôle des modifications sur les bons confirmés
+        locked_orders = self.filtered(lambda o: o.state in ['purchase', 'done'])
+
+        if locked_orders and vals:
+            allowed_fields = self._get_whitelisted_fields()
+            restricted_fields = set(vals.keys()) - allowed_fields
+
+            if restricted_fields:
+                order_names = ', '.join(locked_orders.mapped('name'))
+                _logger.warning(
+                    f"Tentative de modification non autorisée par {self.env.user.name} "
+                    f"sur {order_names}. Champs: {restricted_fields}"
+                )
+                raise UserError(_(
+                    "Modification non autorisée sur le(s) bon(s) de commande confirmé(s): %s.\n"
+                    "Champs non modifiables: %s"
+                ) % (order_names, ', '.join(restricted_fields)))
+
         return super().write(vals)
-            
+
     def _get_whitelisted_fields(self):
-        """Retourne la liste des champs modifiables après confirmation."""
+        """Champs modifiables après confirmation."""
         return {
-            
-            'notes',    # Notes internes
-            'state',    # État de la commande
-            'priority',  # Priorité de la commande
-            'attachment_ids',  # Pièces jointes
-            
-            'message_main_attachment_id',  # Champ critique pour les pièces jointes
-            'activity_ids',                # Gestion des activités
-            'message_ids'                 # Historique de messages
-            'write_uid',
-            'write_date',
+            # Champs utilisateur
+            'notes', 'priority', 'attachment_ids',
+
+            # Champs système (critiques pour le bon fonctionnement)
+            'state', 'message_main_attachment_id', 'activity_ids',
+            'message_ids', 'write_uid', 'write_date', 'payment_count',
+            'payment_total', 'message_partner_ids', '__last_update',
+
+            # Champs de tracking et d'audit
+            'usr_confirmed', 'date_approve', 'message_follower_ids'
         }
-    
+
+    # ==================== CONFIRMATION ET APPROBATION ====================
+
     def button_confirm(self):
-        """Confirme le bon de commande et enregistre l'utilisateur qui confirme."""
-        
-        # Validation personnalisée avant confirmation
-        #self._check_confirm_validation()
-        if not self.user_has_groups('orbit.ccbmshop_purchase_group_manager'):
-            # Si non autorisé, on envoie un message d'erreur
-            raise UserError(_("%s - Vous n'avez pas les droits nécessaires pour confirmer un bon de commande - Contactez un manager pour confirmer.")%(self.env.user.name))
-        
-        self = self.with_context(bypass_purchase_lock=True)
-        res = super().button_confirm()
-        
-        for order in self:
-            if order.state not in ['draft', 'sent', 'to_validate']:
-                continue
-            
-            # Validation effective si utilisateur autorisé
-            # if validation_group and self.env.user in validation_group.users:
-            
-            order.order_line._validate_analytic_distribution()
-            order._add_supplier_to_product()
-            # Deal with double validation process
-            if order._approval_allowed():
-                order.button_approve()
-                # Enregistrement de l'utilisateur qui a confirmé le bon de commande
-                order.write({'usr_confirmed': self.env.user.id,})
-                _logger.info(f" +++ [{fields.Datetime.now()}] +++ Bon de commande {self.name} confirmé par {self.env.user.name}")
-            else:
-                order.write({'state': 'to approve'})
-            
-            # Abonnement automatique au partenaire
-            if order.partner_id not in order.message_partner_ids:
-                order.message_subscribe([order.partner_id.id])
-             
-        return res
+        """Confirmation du bon de commande avec contrôles personnalisés."""
 
-    
-    # Validation optionelle avant confirmation (à personnaliser)
-    def _check_confirm_validation(self):
-        """Add custom validation rules before confirmation"""
-        
-        # Vérification du groupe utilisateur
+        # Vérification des permissions
         if not self.env.user.has_group('orbit.ccbmshop_purchase_group_manager'):
-            raise UserError(_("Permission refusée - user: %s - Contactez un manager pour confirmer.")%(self.env.user.name))
-        
-        
-# class PurchaseOrderLine(models.Model):
-#     _inherit = 'purchase.order.line'
-    
-#     # product_id = fields.Many2one('product.template', string='Product', domain=[('purchase_ok', '=', True), ('product_tmpl_id.type','in', ['product', 'service'])], index='btree_not_null')
-    
+            raise UserError(_(
+                "%s - Vous n'avez pas les droits nécessaires pour confirmer un bon de commande. "
+                "Contactez un manager pour confirmer."
+            ) % self.env.user.name)
 
-        
+        # Validation des données avant confirmation
+        for order in self:
+            order._check_confirm_validation()
+
+        # Confirmation avec contexte d'autorisation
+        self = self.with_context(bypass_purchase_lock=True)
+        result = super().button_confirm()
+
+        # Post-traitement après confirmation
+        for order in self:
+            if order.state in ['draft', 'sent', 'to_validate']:
+                continue
+
+            try:
+                # Validation de la distribution analytique
+                order.order_line._validate_analytic_distribution()
+
+                # Ajout du fournisseur aux produits si nécessaire
+                order._add_supplier_to_product()
+
+                # Gestion de la double validation
+                if order._approval_allowed():
+                    order.button_approve()
+                    order.write({'usr_confirmed': self.env.user.id})
+                    _logger.info(
+                        f"[{fields.Datetime.now()}] Bon de commande {order.name} "
+                        f"confirmé par {self.env.user.name}"
+                    )
+                else:
+                    order.write({'state': 'to_approve'})
+
+                # Abonnement automatique du fournisseur aux notifications
+                if order.partner_id not in order.message_partner_ids:
+                    order.message_subscribe([order.partner_id.id])
+
+            except Exception as e:
+                _logger.error(f"Erreur post-confirmation {order.name}: {e}")
+                # Ne pas bloquer la confirmation, juste logger l'erreur
+
+        return result
+
+    def _check_confirm_validation(self):
+        """Validations personnalisées avant confirmation."""
+        self.ensure_one()
+
+        # Vérification des lignes de commande
+        if not self.order_line:
+            raise UserError(_("Impossible de confirmer un bon de commande sans lignes."))
+
+        # Vérification du fournisseur
+        if not self.partner_id:
+            raise UserError(_("Veuillez sélectionner un fournisseur avant de confirmer."))
+
+        # Vérification des prix
+        zero_price_lines = self.order_line.filtered(lambda l: l.price_unit <= 0)
+        if zero_price_lines:
+            products = ', '.join(zero_price_lines.mapped('product_id.name'))
+            raise UserError(_(
+                "Les produits suivants ont un prix nul ou négatif: %s"
+            ) % products)
+
+        # Vérification des quantités
+        zero_qty_lines = self.order_line.filtered(lambda l: l.product_qty <= 0)
+        if zero_qty_lines:
+            products = ', '.join(zero_qty_lines.mapped('product_id.name'))
+            raise UserError(_(
+                "Les produits suivants ont une quantité nulle ou négative: %s"
+            ) % products)
+
+    # ==================== MÉTHODES UTILITAIRES ====================
+
+    @api.model
+    def _cron_cleanup_validation_requests(self):
+        """Nettoyage automatique des demandes de validation anciennes."""
+        cutoff_date = fields.Datetime.now() - timedelta(days=30)
+        old_requests = self.search([
+            ('state', '=', 'to_validate'),
+            ('write_date', '<', cutoff_date)
+        ])
+
+        if old_requests:
+            _logger.info(f"Nettoyage de {len(old_requests)} anciennes demandes de validation")
+            old_requests.write({'state': 'draft'})
+
+    def action_reset_to_draft(self):
+        """Remet le bon de commande en brouillon (managers uniquement)."""
+        if not self.env.user.has_group('orbit.ccbmshop_purchase_group_manager'):
+            raise UserError(_("Seuls les managers peuvent remettre en brouillon."))
+
+        for order in self:
+            if order.state == 'purchase':
+                raise UserError(_(
+                    "Impossible de remettre en brouillon un bon de commande confirmé: %s"
+                ) % order.name)
+
+        self.write({'state': 'draft', 'usr_confirmed': False})
+        return True
