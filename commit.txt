@@ -1,6 +1,22 @@
-[FIX] Validation des droits utilisateur pour la confirmation de commande à crédit et le menu catégorie
+feat: Add professional email validation workflow for purchase orders
 
-- Correction de l'identifiant externe du groupe `credit_group_user` en utilisant un identifiant pleinement qualifié (`module_name.credit_group_user`).
-- Ajout d'un message d'erreur explicite pour informer l'utilisateur en cas de droits insuffisants : 
-  "Vous n'avez pas les droits requis pour valider cette commande. Veuillez contacter un utilisateur ayant les permissions nécessaires dans le groupe 'Utilisateur Crédit'."
-- Amélioration de la logique de validation RH pour prendre en compte le responsable principal de l'entreprise associée au client, ou l'utilisateur actuel en cas d'absence de l'entreprise.
+- Add purchase order validation request system with manager approval
+- Implement email notifications for validation requests, approvals, and rejections
+- Create Outlook-compatible email templates with professional design
+- Add tracking fields for validation workflow (requested_by, validated_by, dates)
+- Include VML fallbacks for rounded corners in Outlook clients
+- Fix email recipient logic to use manager group permissions
+- Add proper error handling and logging for email operations
+
+Templates added:
+- email_template_purchase_order_validation (validation request)
+- email_template_purchase_order_approved (approval notification)
+- email_template_purchase_order_rejected (rejection notification)
+
+Methods added:
+- action_to_validation() - Submit for validation
+- action_validate_purchase_order() - Approve and notify
+- action_reject_purchase_order() - Reject and notify
+- _get_manager_emails() - Retrieve manager emails
+- _notify_validation_approved() - Send approval notification
+- _notify_validation_rejected() - Send rejection notification

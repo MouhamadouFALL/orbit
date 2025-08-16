@@ -763,6 +763,9 @@ class Preorder(models.Model):
     #             order._compute_credit_payment_duedate_data()
                 
 ########################################## Debut ###############################################"
+    def gestion_echeances(self):
+        self._compute_credit_payment_duedate_data()  
+        
     @api.depends(
         'type_sale',
         'date_approved_creditorder',

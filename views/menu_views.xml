@@ -79,7 +79,6 @@
         <menuitem id="orbit_provisions_menu" name="Achats" sequence="12" groups="orbit.purchase_ccbmshop_group_user">
             <menuitem id="orbit_purchase_order_menu"
                 name="Achats"
-                
                 action="purchase.purchase_rfq"
                 sequence="3"/>
         </menuitem>

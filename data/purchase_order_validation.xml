@@ -4,39 +4,450 @@
     <record id="email_template_purchase_order_validation" model="mail.template">
         <field name="name">CCBMSHOP - Demande de validation du Bon d'achat</field>
         <field name="model_id" ref="orbit.model_purchase_order"/>
-        <field name="subject">Validation requise pour le Bon d'achat {{object.name}}</field>
-        <!-- <field name="email_from">${object.user_id.email}</field> -->
-        <!-- <field name="email_from">{{object.company_id.email or 'ccbmshop.orbitcity@ccbm.sn'}}</field> -->
+        <field name="subject">🔔 Validation requise • Bon de commande {{object.name}}</field>
         <field name="email_from"></field>
-        <!-- <field name="email_to">{{object.user_id.email}}</field> -->
         <field name="email_to"></field>
-        <!-- <field name="email_cc">{{object.user_id.email}}</field> -->
         <field name="body_html" type="html">
-                
-                    <!-- Bloc Logo en haut de l'email -->
-                    <!-- <div style="text-align:center; margin-bottom:15px;">
-                        <img t-att-src="'/logo.png?company_id=%s' % (object.company_id.id or 0)" style="max-width:200px;" t-att-alt="'Logo %s' % object.company_id.name"/>
-                    </div> -->
+            <!--[if mso]>
+            <noscript>
+                <xml>
+                    <o:OfficeDocumentSettings>
+                        <o:PixelsPerInch>96</o:PixelsPerInch>
+                    </o:OfficeDocumentSettings>
+                </xml>
+            </noscript>
+            <![endif]-->
+            
+            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="font-family: Arial, sans-serif;">
+                <tr>
+                    <td align="center" style="padding: 20px 0;">
+                        
+                        <!-- Container principal -->
+                        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="600" style="max-width: 600px; background-color: #f8f9fa; border-radius: 8px; overflow: hidden;">
+                            
+                            <!-- Header -->
+                            <tr>
+                                <td style="background-color: #0059ff; padding: 40px 30px; text-align: center;">
+                                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                                        <tr>
+                                            <td align="center">
+                                                <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="background-color: #ffffff; border-radius: 12px; padding: 25px; display: inline-block;">
+                                                    <tr>
+                                                        <td align="center">
+                                                            <h1 style="color: #0059ff; margin: 0; font-size: 26px; font-weight: bold; font-family: Arial, sans-serif;">
+                                                                📋 CCBM SHOP
+                                                            </h1>
+                                                            <p style="color: #666666; margin: 8px 0 0 0; font-size: 15px; font-family: Arial, sans-serif;">
+                                                                Système de gestion des achats
+                                                            </p>
+                                                        </td>
+                                                    </tr>
+                                                </table>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
 
-                    <!-- Bloc de texte -->
-                    <div style="margin:0; padding:0;">
-                        <p style="font-size: 13px;">
-                            <!-- Bonjour <strong>Bara</strong> <strong><t t-esc="object.partner_id.name"/></strong>,<br/><br/> -->
-                            Bonjour <strong>Bara</strong>,<br/><br/>
-                            <p><strong> <span t-esc="user.name"/> </strong> demande de valider ce Bon de commande <strong><span t-esc="object.name"/></strong> en cliquant sur le bouton ci-dessous.</p>
-                            <p>
-                                <a t-att-href="env['ir.config_parameter'].sudo().get_param('web.base.urls') + '/web#id=' + str(object.id) + '&amp;view_type=form&amp;model=purchase.order'" 
-                                    style="background-color:rgb(0, 89, 255); color: white; padding: 20px 40px; text-decoration: none; border-radius: 7px; display: inline-block;">
+                            <!-- Contenu principal -->
+                            <tr>
+                                <td style="background-color: white; padding: 40px 30px;">
+                                    
+                                    <!-- Badge urgent -->
+                                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                                        <tr>
+                                            <td align="center" style="padding-bottom: 30px;">
+                                                <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="background-color: #fff3cd; border-radius: 20px; padding: 8px 20px; display: inline-block;">
+                                                    <tr>
+                                                        <td>
+                                                            <span style="color: #856404; font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; font-family: Arial, sans-serif;">
+                                                                ⚠️ ACTION REQUISE
+                                                            </span>
+                                                        </td>
+                                                    </tr>
+                                                </table>
+                                            </td>
+                                        </tr>
+                                    </table>
 
-                                    Valider <span t-esc="object.name"/>
-                                </a>
-                            </p>
-                            <p>Cordialement,<br/><strong><t t-esc="object.company_id.name"/></strong></p>
-                        </p>
-                    </div>
+                                    <!-- Message principal -->
+                                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                                        <tr>
+                                            <td style="padding-bottom: 35px;">
+                                                <h2 style="color: #2c3e50; margin: 0 0 20px 0; font-size: 20px; font-weight: bold; font-family: Arial, sans-serif;">
+                                                    Bonjour,
+                                                </h2>
+                                                
+                                                <p style="color: #555; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0; font-family: Arial, sans-serif;">
+                                                    <strong><span t-esc="user.name"/></strong> a soumis un nouveau bon de commande qui nécessite votre validation.
+                                                </p>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                    
+                                    <!-- Carte informations -->
+                                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color: #f8f9fa; border-left: 4px solid #0059ff; margin: 25px 0;">
+                                        <tr>
+                                            <td style="padding: 20px;">
+                                                <!-- En-tête carte -->
+                                                <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                                                    <tr>
+                                                        <td style="padding-bottom: 15px;">
+                                                            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                                                                <tr>
+                                                                    <td width="40" style="vertical-align: top;">
+                                                                        <span style="font-size: 24px;">📄</span>
+                                                                    </td>
+                                                                    <td style="vertical-align: top;">
+                                                                        <h3 style="margin: 0; color: #2c3e50; font-size: 18px; font-weight: bold; font-family: Arial, sans-serif;">
+                                                                            Bon de commande : <span t-esc="object.name"/>
+                                                                        </h3>
+                                                                        <p style="margin: 5px 0 0 0; color: #666; font-size: 14px; font-family: Arial, sans-serif;">
+                                                                            Fournisseur : <strong><span t-esc="object.partner_id.name"/></strong>
+                                                                        </p>
+                                                                    </td>
+                                                                </tr>
+                                                            </table>
+                                                        </td>
+                                                    </tr>
+                                                </table>
+                                                
+                                                <!-- Séparateur -->
+                                                <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                                                    <tr>
+                                                        <td style="border-top: 1px solid #dee2e6; padding-top: 15px;">
+                                                            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                                                                <tr>
+                                                                    <td style="color: #666; font-size: 14px; font-family: Arial, sans-serif;">
+                                                                        💰 Montant total
+                                                                    </td>
+                                                                    <td align="right" style="font-weight: bold; color: #2c3e50; font-size: 16px; font-family: Arial, sans-serif;">
+                                                                        <span t-esc="'{:,.0f}'.format(object.amount_total)"/> <span t-esc="object.currency_id.name"/>
+                                                                    </td>
+                                                                </tr>
+                                                            </table>
+                                                        </td>
+                                                    </tr>
+                                                </table>
+                                            </td>
+                                        </tr>
+                                    </table>
 
-            </field>
+                                    <!-- Boutons d'action -->
+                                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                                        <tr>
+                                            <td align="center" style="padding: 40px 0;">
+                                                <!-- Bouton principal -->
+                                                <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin-bottom: 20px;">
+                                                    <tr>
+                                                        <td style="background-color: #28a745; border-radius: 8px;">
+                                                            <a t-att-href="(env['ir.config_parameter'].sudo().get_param('web.base.urls') or 'http://orbitcity.sn') + '/web#id=' + str(object.id) + '&amp;view_type=form&amp;model=purchase.order'" 
+                                                               style="color: white; padding: 16px 32px; text-decoration: none; font-weight: bold; font-size: 16px; font-family: Arial, sans-serif; display: block;">
+                                                                ✅ Valider le bon de commande
+                                                            </a>
+                                                        </td>
+                                                    </tr>
+                                                </table>
+
+                                                <!-- Espacement entre boutons -->
+                                                <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                                                    <tr>
+                                                        <td style="height: 20px; line-height: 20px;">&#160;</td>
+                                                    </tr>
+                                                </table>
+                                                
+                                                <!-- Bouton secondaire -->
+                                                <table role="presentation" cellspacing="0" cellpadding="0" border="0">
+                                                    <tr>
+                                                        <td style="border: 2px solid #0059ff; border-radius: 8px; background-color: #ffffff;">
+                                                            <a t-att-href="(env['ir.config_parameter'].sudo().get_param('web.base.url') or 'http://orbitcity.sn') + '/web#action=purchase.purchase_rfq&amp;model=purchase.order'" 
+                                                               style="color: #0059ff; padding: 12px 24px; text-decoration: none; font-weight: 500; font-size: 14px; font-family: Arial, sans-serif; display: block;">
+                                                                📋 Voir tous les bons de commande
+                                                            </a>
+                                                        </td>
+                                                    </tr>
+                                                </table>
+                                            </td>
+                                        </tr>
+                                    </table>
+
+                                    <!-- Note importante -->
+                                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color: #fff3cd; border: 1px solid #ffeaa7; border-radius: 8px; margin: 30px 0;">
+                                        <tr>
+                                            <td style="padding: 20px;">
+                                                <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                                                    <tr>
+                                                        <td width="30" style="vertical-align: top;">
+                                                            <span style="font-size: 20px;">💡</span>
+                                                        </td>
+                                                        <td style="vertical-align: top;">
+                                                            <p style="margin: 0; color: #856404; font-size: 14px; line-height: 1.5; font-family: Arial, sans-serif;">
+                                                                <strong>Important :</strong> Cette demande nécessite une action de votre part. 
+                                                                Veuillez examiner et valider ce bon de commande dans les plus brefs délais.
+                                                            </p>
+                                                        </td>
+                                                    </tr>
+                                                </table>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
+
+                            <!-- Footer -->
+                            <tr>
+                                <td style="background-color: #2c3e50; padding: 30px; text-align: center;">
+                                    <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                                        <tr>
+                                            <td align="center">
+                                                <p style="margin: 0 0 15px 0; font-size: 16px; font-weight: bold; color: white; font-family: Arial, sans-serif;">
+                                                    <span t-esc="object.company_id.name or 'CCBM SHOP'"/>
+                                                </p>
+                                                <p style="margin: 0; font-size: 14px; color: #bdc3c7; line-height: 1.5; font-family: Arial, sans-serif;">
+                                                    Cet email a été généré automatiquement par le système CCBM Shop.<br/>
+                                                    Pour toute question, contactez l'équipe support.
+                                                </p>
+                                                
+                                                <!-- Liens footer -->
+                                                <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                                                    <tr>
+                                                        <td align="center" style="padding-top: 20px; border-top: 1px solid #34495e;">
+                                                            <a href="mailto:shop@ccbm.sn" style="color: #3498db; text-decoration: none; margin: 0 15px; font-size: 13px; font-family: Arial, sans-serif;">
+                                                                📧 Support
+                                                            </a>
+                                                            <a t-att-href="(env['ir.config_parameter'].sudo().get_param('web.base.urls') or 'http://orbitcity.sn')" style="color: #3498db; text-decoration: none; margin: 0 15px; font-size: 13px; font-family: Arial, sans-serif;">
+                                                                🌐 Accéder au système
+                                                            </a>
+                                                        </td>
+                                                    </tr>
+                                                </table>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+            </table>
+        </field>
         <field name="auto_delete" eval="True"/>
     </record>
 
+    <!-- Template pour notification d'approbation -->
+    <record id="email_template_purchase_order_approved" model="mail.template">
+        <field name="name">CCBMSHOP - Bon de commande approuvé</field>
+        <field name="model_id" ref="orbit.model_purchase_order"/>
+        <field name="subject">✅ Votre bon de commande {{object.name}} a été approuvé</field>
+        <field name="email_from"></field>
+        <field name="email_to"></field>
+        <field name="body_html" type="html">
+            <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f8f9fa;">
+                
+                <!-- Header avec succès -->
+                <div style="background-color: #28a745; padding: 40px 30px; text-align: center; border-radius: 8px 8px 0 0;">
+                    <div style="background-color: #ffffff; padding: 25px; border-radius: 12px; display: inline-block; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+                        <h1 style="color: #28a745; margin: 0; font-size: 26px; font-weight: 700;">
+                            <span style="font-size: 30px;">✅</span> APPROUVÉ
+                        </h1>
+                        <p style="color: #666666; margin: 8px 0 0 0; font-size: 15px; font-weight: 500;">
+                            Votre demande a été validée
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Contenu principal -->
+                <div style="background-color: white; padding: 40px 30px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+                    
+                    <!-- Badge succès -->
+                    <div style="text-align: center; margin-bottom: 30px;">
+                        <span style="background-color: #28a745; color: white; padding: 8px 20px; border-radius: 20px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">
+                            ✅ Validation approuvée
+                        </span>
+                    </div>
+
+                    <!-- Message principal -->
+                    <div style="margin-bottom: 35px;">
+                        <h2 style="color: #2c3e50; margin: 0 0 20px 0; font-size: 20px; font-weight: 600;">
+                            Bonjour <span t-esc="object.validation_requested_by.name"/>,
+                        </h2>
+                        
+                        <p style="color: #555; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+                            Bonne nouvelle ! Votre bon de commande a été <strong>approuvé</strong> par <strong><span t-esc="object.validated_by.name or 'un manager'"/></strong>.
+                        </p>
+                        
+                        <!-- Informations du bon de commande -->
+                        <div style="background-color: #d4edda; border-left: 4px solid #28a745; padding: 20px; border-radius: 0 8px 8px 0; margin: 25px 0;">
+                            <div style="display: flex; align-items: center; margin-bottom: 15px;">
+                                <span style="font-size: 24px; margin-right: 10px;">📄</span>
+                                <div>
+                                    <h3 style="margin: 0; color: #155724; font-size: 18px; font-weight: 600;">
+                                        Bon de commande : <span t-esc="object.name"/>
+                                    </h3>
+                                    <p style="margin: 5px 0 0 0; color: #155724; font-size: 14px;">
+                                        Fournisseur : <strong><span t-esc="object.partner_id.name"/></strong>
+                                    </p>
+                                </div>
+                            </div>
+                            
+                            <div style="border-top: 1px solid #c3e6cb; padding-top: 15px; margin-top: 15px;">
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <span style="color: #155724; font-size: 14px;">💰 Montant total</span>
+                                    <span style="font-weight: 600; color: #155724; font-size: 16px;">
+                                        <span t-esc="'{:,.0f}'.format(object.amount_total)"/> FCFA
+                                    </span>
+                                </div>
+                                <div style="margin-top: 10px;">
+                                    <span style="color: #155724; font-size: 14px;">📅 Approuvé le : 
+                                        <span t-esc="object.validation_date.strftime('%d/%m/%Y à %H:%M') if object.validation_date else 'Date non disponible'"/>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bouton d'action -->
+                    <div style="text-align: center; margin: 40px 0;">
+                        <a t-att-href="(env['ir.config_parameter'].sudo().get_param('web.base.url') or 'http://localhost:8069') + '/web#id=' + str(object.id) + '&amp;view_type=form&amp;model=purchase.order'" 
+                           style="background-color: #0059ff; color: white; padding: 16px 32px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px; display: inline-block; box-shadow: 0 2px 8px rgba(0, 89, 255, 0.3);">
+                            👁️ Voir le bon de commande
+                        </a>
+                    </div>
+
+                    <!-- Note -->
+                    <div style="background-color: #d1ecf1; border: 1px solid #bee5eb; border-radius: 8px; padding: 20px; margin: 30px 0;">
+                        <div style="display: flex; align-items: flex-start;">
+                            <span style="font-size: 20px; margin-right: 10px;">ℹ️</span>
+                            <div>
+                                <p style="margin: 0; color: #0c5460; font-size: 14px; line-height: 1.5;">
+                                    <strong>Prochaines étapes :</strong> Votre bon de commande est maintenant en cours de traitement. 
+                                    Vous recevrez une notification lors de la réception des marchandises.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Footer -->
+                <div style="background-color: #2c3e50; color: white; padding: 30px; text-align: center; border-radius: 0 0 8px 8px;">
+                    <p style="margin: 0 0 15px 0; font-size: 16px; font-weight: 600;">
+                        <span t-esc="object.company_id.name or 'CCBM'"/>
+                    </p>
+                    <p style="margin: 0; font-size: 14px; color: #bdc3c7; line-height: 1.5;">
+                        Merci de votre confiance • CCBM Shop
+                    </p>
+                </div>
+            </div>
+        </field>
+        <field name="auto_delete" eval="True"/>
+    </record>
+
+    <!-- Template pour notification de rejet -->
+    <!-- <record id="email_template_purchase_order_rejected" model="mail.template">
+        <field name="name">CCBMSHOP - Bon de commande rejeté</field>
+        <field name="model_id" ref="orbit.model_purchase_order"/>
+        <field name="subject">❌ Votre bon de commande {{object.name}} a été rejeté</field>
+        <field name="email_from"></field>
+        <field name="email_to"></field>
+        <field name="body_html" type="html">
+            <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f8f9fa;">
+                
+                <!-- Header avec rejet -->
+                <div style="background-color: #dc3545; padding: 40px 30px; text-align: center; border-radius: 8px 8px 0 0;">
+                    <div style="background-color: #ffffff; padding: 25px; border-radius: 12px; display: inline-block; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+                        <h1 style="color: #dc3545; margin: 0; font-size: 26px; font-weight: 700;">
+                            <span style="font-size: 30px;">❌</span> REJETÉ
+                        </h1>
+                        <p style="color: #666666; margin: 8px 0 0 0; font-size: 15px; font-weight: 500;">
+                            Votre demande nécessite des modifications
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Contenu principal -->
+                <div style="background-color: white; padding: 40px 30px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+                    
+                    <!-- Badge rejet -->
+                    <div style="text-align: center; margin-bottom: 30px;">
+                        <span style="background-color: #dc3545; color: white; padding: 8px 20px; border-radius: 20px; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">
+                            ❌ Validation rejetée
+                        </span>
+                    </div>
+
+                    <!-- Message principal -->
+                    <div style="margin-bottom: 35px;">
+                        <h2 style="color: #2c3e50; margin: 0 0 20px 0; font-size: 20px; font-weight: 600;">
+                            Bonjour <span t-esc="object.validation_requested_by.name"/>,
+                        </h2>
+                        
+                        <p style="color: #555; font-size: 16px; line-height: 1.6; margin: 0 0 20px 0;">
+                            Votre bon de commande a été <strong>rejeté</strong> par <strong><span t-esc="object.rejected_by.name or 'un manager'"/></strong> et remis en brouillon.
+                        </p>
+                        
+                        <!-- Informations du bon de commande -->
+                        <div style="background-color: #f8d7da; border-left: 4px solid #dc3545; padding: 20px; border-radius: 0 8px 8px 0; margin: 25px 0;">
+                            <div style="display: flex; align-items: center; margin-bottom: 15px;">
+                                <span style="font-size: 24px; margin-right: 10px;">📄</span>
+                                <div>
+                                    <h3 style="margin: 0; color: #721c24; font-size: 18px; font-weight: 600;">
+                                        Bon de commande : <span t-esc="object.name"/>
+                                    </h3>
+                                    <p style="margin: 5px 0 0 0; color: #721c24; font-size: 14px;">
+                                        Fournisseur : <strong><span t-esc="object.partner_id.name"/></strong>
+                                    </p>
+                                </div>
+                            </div>
+                            
+                            <div style="border-top: 1px solid #f1aeb5; padding-top: 15px; margin-top: 15px;">
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <span style="color: #721c24; font-size: 14px;">💰 Montant total</span>
+                                    <span style="font-weight: 600; color: #721c24; font-size: 16px;">
+                                        <span t-esc="'{:,.0f}'.format(object.amount_total)"/> FCFA
+                                    </span>
+                                </div>
+                                <div style="margin-top: 10px;">
+                                    <span style="color: #721c24; font-size: 14px;">📅 Rejeté le : 
+                                        <span t-esc="object.rejection_date.strftime('%d/%m/%Y à %H:%M') if object.rejection_date else 'Date non disponible'"/>
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bouton d'action -->
+                    <div style="text-align: center; margin: 40px 0;">
+                        <a t-att-href="(env['ir.config_parameter'].sudo().get_param('web.base.url') or 'http://localhost:8069') + '/web#id=' + str(object.id) + '&amp;view_type=form&amp;model=purchase.order'" 
+                           style="background-color: #0059ff; color: white; padding: 16px 32px; text-decoration: none; border-radius: 8px; font-weight: 600; font-size: 16px; display: inline-block; box-shadow: 0 2px 8px rgba(0, 89, 255, 0.3);">
+                            ✏️ Modifier le bon de commande
+                        </a>
+                    </div>
+
+                    <!-- Note importante -->
+                    <div style="background-color: #fff3cd; border: 1px solid #ffeaa7; border-radius: 8px; padding: 20px; margin: 30px 0;">
+                        <div style="display: flex; align-items: flex-start;">
+                            <span style="font-size: 20px; margin-right: 10px;">💡</span>
+                            <div>
+                                <p style="margin: 0; color: #856404; font-size: 14px; line-height: 1.5;">
+                                    <strong>Que faire maintenant ?</strong> Veuillez réviser votre bon de commande, 
+                                    apporter les modifications nécessaires et le soumettre à nouveau pour validation.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Footer -->
+                <div style="background-color: #2c3e50; color: white; padding: 30px; text-align: center; border-radius: 0 0 8px 8px;">
+                    <p style="margin: 0 0 15px 0; font-size: 16px; font-weight: 600;">
+                        <span t-esc="object.company_id.name or 'CCBM'"/>
+                    </p>
+                    <p style="margin: 0; font-size: 14px; color: #bdc3c7; line-height: 1.5;">
+                        N'hésitez pas à nous contacter pour plus d'informations • CCBM Shop
+                    </p>
+                </div>
+            </div>
+        </field>
+        <field name="auto_delete" eval="True"/>
+    </record> -->
+    
 </odoo>
