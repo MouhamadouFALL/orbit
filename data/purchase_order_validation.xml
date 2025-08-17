@@ -343,7 +343,7 @@
     </record>
 
     <!-- Template pour notification de rejet -->
-    <!-- <record id="email_template_purchase_order_rejected" model="mail.template">
+    <record id="email_template_purchase_order_rejected" model="mail.template">
         <field name="name">CCBMSHOP - Bon de commande rejeté</field>
         <field name="model_id" ref="orbit.model_purchase_order"/>
         <field name="subject">❌ Votre bon de commande {{object.name}} a été rejeté</field>
@@ -448,6 +448,6 @@
             </div>
         </field>
         <field name="auto_delete" eval="True"/>
-    </record> -->
+    </record>
     
 </odoo>
